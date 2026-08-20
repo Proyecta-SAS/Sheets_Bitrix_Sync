@@ -10,6 +10,10 @@ venv/
 !.env.example
 credentials.json
 token.json
+vendor/
+composer.phar
+storage/*.sqlite
+storage/*.sqlite-*
 
 # Editors and operating systems
 .vscode/
