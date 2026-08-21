@@ -21,4 +21,5 @@ deployment:
     - /bin/cp -f tests/run.php "$DEPLOYPATH/tests/run.php"
     - /bin/cp -f views/dashboard.php "$DEPLOYPATH/views/dashboard.php"
     - /bin/cp -f views/portal.php "$DEPLOYPATH/views/portal.php"
-    - cd "$DEPLOYPATH" && if command -v composer >/dev/null 2>&1; then composer install --no-dev --optimize-autoloader; elif [ -x /opt/cpanel/composer/bin/composer ]; then /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader; else echo "Composer no esta disponible en el servidor. Instale dependencias manualmente o suba vendor/."; fi
+    - cd "$DEPLOYPATH" && if command -v composer >/dev/null 2>&1; then composer install --no-dev --optimize-autoloader; elif [ -x /opt/cpanel/composer/bin/composer ]; then /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader; elif [ -x /usr/local/bin/composer ]; then /usr/local/bin/composer install --no-dev --optimize-autoloader; else echo "ERROR Composer no esta disponible en el servidor. Ejecute composer install manualmente en $DEPLOYPATH o suba vendor/." && exit 1; fi
+    - test -f "$DEPLOYPATH/vendor/autoload.php"
