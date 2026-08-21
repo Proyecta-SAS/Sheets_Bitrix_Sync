@@ -1,5 +1,21 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/sheetsxbitrix/public_html/
-    - /bin/cp -R . $DEPLOYPATH
+    - export DEPLOYPATH=/home/sheetsxbitrix/public_html
+    - /bin/mkdir -p "$DEPLOYPATH/app/Infrastructure"
+    - /bin/mkdir -p "$DEPLOYPATH/app/Sync"
+    - /bin/mkdir -p "$DEPLOYPATH/docs"
+    - /bin/mkdir -p "$DEPLOYPATH/public"
+    - /bin/mkdir -p "$DEPLOYPATH/tests"
+    - /bin/mkdir -p "$DEPLOYPATH/views"
+    - /bin/cp -f .htaccess "$DEPLOYPATH/.htaccess"
+    - /bin/cp -f README.md "$DEPLOYPATH/README.md"
+    - /bin/cp -f app/Infrastructure/Database.php "$DEPLOYPATH/app/Infrastructure/Database.php"
+    - /bin/cp -f app/Infrastructure/ProcessedRowRepository.php "$DEPLOYPATH/app/Infrastructure/ProcessedRowRepository.php"
+    - /bin/cp -f app/Sync/SyncService.php "$DEPLOYPATH/app/Sync/SyncService.php"
+    - /bin/cp -f docs/INSTALL.md "$DEPLOYPATH/docs/INSTALL.md"
+    - /bin/cp -f docs/google-apps-script-webhook.js "$DEPLOYPATH/docs/google-apps-script-webhook.js"
+    - /bin/cp -f public/index.php "$DEPLOYPATH/public/index.php"
+    - /bin/cp -f tests/run.php "$DEPLOYPATH/tests/run.php"
+    - /bin/cp -f views/dashboard.php "$DEPLOYPATH/views/dashboard.php"
+    - /bin/cp -f views/portal.php "$DEPLOYPATH/views/portal.php"
