@@ -9,7 +9,7 @@ if (PHP_SAPI !== 'cli') {
 
 $root = dirname(__DIR__);
 $checks = [
-    'PHP >= 8.2' => version_compare(PHP_VERSION, '8.2.0', '>='),
+    'PHP >= 8.1' => version_compare(PHP_VERSION, '8.1.0', '>='),
     'ext-curl' => extension_loaded('curl'),
     'ext-pdo' => extension_loaded('pdo'),
     'pdo_sqlite' => in_array('sqlite', PDO::getAvailableDrivers(), true),

@@ -37,6 +37,14 @@ function requestHeader(string $name): string
     return trim((string) ($_SERVER[$serverKey] ?? ''));
 }
 
+function appBasePath(): string
+{
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php');
+    $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
+
+    return $base === '' || $base === '.' || $base === '/public' ? '' : $base;
+}
+
 function flash(string $type, string $message): void
 {
     $_SESSION['flash'][] = ['type' => $type, 'message' => $message];
@@ -44,9 +52,8 @@ function flash(string $type, string $message): void
 
 function goHome(): never
 {
-    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php');
-    $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
-    Response::redirect(($base === '' || $base === '.') ? '/' : $base . '/');
+    $base = appBasePath();
+    Response::redirect($base === '' ? '/' : $base . '/');
 }
 
 function portalPayload(App\Application $app, int $limit = 100): array
@@ -148,8 +155,7 @@ if ($path === '/login') {
 }
 
 if (!$auth->check()) {
-    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php');
-    $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
+    $base = appBasePath();
     Response::redirect((($base === '' || $base === '.') ? '' : $base) . '/login');
 }
 
