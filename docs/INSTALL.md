@@ -50,6 +50,21 @@ Si cPanel no ofrece Composer global, descargue Composer siguiendo su instalador 
 
 Configure el dominio/subdominio para que apunte a `public/`. Esto evita exponer `.env`, `storage/`, `vendor/` y la credencial JSON.
 
+Si HostGator obliga a instalar el proyecto completo dentro de `public_html`, conserve el `.htaccess` de la raiz del proyecto. Ese archivo redirige las visitas hacia `public/` y bloquea el acceso web a `app/`, `bin/`, `docs/`, `storage/`, `tests/`, `vendor/`, `.env` y credenciales.
+
+Permisos recomendados en cPanel:
+
+```bash
+find /home/USUARIO/public_html -type d -exec chmod 755 {} \;
+find /home/USUARIO/public_html -type f -exec chmod 644 {} \;
+chmod 600 /home/USUARIO/public_html/.env
+chmod 750 /home/USUARIO/public_html/storage /home/USUARIO/public_html/storage/credentials
+chmod 660 /home/USUARIO/public_html/storage/app.sqlite
+chmod 600 /home/USUARIO/public_html/storage/credentials/google-service-account.json
+```
+
+Si el navegador muestra `DNS_PROBE_FINISHED_NXDOMAIN`, el dominio o subdominio todavia no resuelve en DNS. Ese error ocurre antes de que Apache, PHP o `.htaccess` reciban la solicitud. En cPanel debe existir el subdominio `sheetsxbitrix.proyectasolutions.co` y el DNS debe tener un registro `A` o `CNAME` valido apuntando al servidor de HostGator.
+
 ## 4. Configurar `.env`
 
 Genere primero el hash administrativo:
@@ -134,7 +149,24 @@ Cuerpo:
 }
 ```
 
-El endpoint solo acepta POST, valida JSON, exige token y limita solicitudes por IP. No dependa exclusivamente de `onEdit`: mantenga el cron como mecanismo de respaldo.
+El endpoint solo acepta POST, valida JSON, exige token y limita solicitudes por IP. Para que Google Sheets lo llame automaticamente al editar o agregar una fila, use el script de ejemplo en `docs/google-apps-script-webhook.js`.
+
+En Google Sheets:
+
+1. Abra **Extensiones > Apps Script**.
+2. Pegue el contenido de `docs/google-apps-script-webhook.js`.
+3. En **Configuracion del proyecto > Propiedades del script**, cree:
+
+   ```text
+   WEBHOOK_URL=https://su-dominio.com/api/sheets/event
+   WEBHOOK_SECRET=el_mismo_valor_de_WEBHOOK_SECRET
+   HEADER_ROW=1
+   REQUIRED_HEADERS=Nombre
+   ```
+
+4. Ejecute una vez `installTriggers()` y acepte los permisos.
+
+`REQUIRED_HEADERS` evita disparar la integracion con filas incompletas. Si la hoja real usa otro encabezado obligatorio para el titulo de la negociacion, cambielo por ese nombre. No dependa exclusivamente de `onEdit`: mantenga el cron como mecanismo de respaldo.
 
 ## 8. Columnas de control e idempotencia
 

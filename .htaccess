@@ -1,0 +1,24 @@
+Options -Indexes
+DirectoryIndex public/index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteRule ^(?:app|bin|docs|storage|tests|vendor)(?:/|$) - [R=404,L,NC]
+    RewriteRule ^(?:\.env|\.env\..*|composer\.(?:json|lock)|composer\.phar|credentials\.json|token\.json)$ - [R=404,L,NC]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^$ public/ [L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.+)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^(?:\.env|\.env\..*|composer\.(?:json|lock)|composer\.phar|credentials\.json|token\.json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
