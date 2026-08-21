@@ -19,7 +19,7 @@ Versión actual: **V1.0.0**.
 
 ## Requisitos
 
-- PHP 8.2 o superior.
+- PHP 8.1 o superior.
 - Composer 2.
 - Extensiones PHP: cURL, PDO y PDO SQLite.
 - HTTPS.

@@ -33,7 +33,7 @@ Una estructura recomendada es:
 /home/USUARIO/apps/Sheets_Bitrix/public/   <- document root del subdominio
 ```
 
-Desde **Select PHP Version** o **MultiPHP Manager**, seleccione PHP 8.2 o superior y habilite `curl`, `pdo`, `pdo_sqlite`, `openssl` y `mbstring`.
+Desde **Select PHP Version** o **MultiPHP Manager**, seleccione PHP 8.1 o superior y habilite `curl`, `pdo`, `pdo_sqlite`, `openssl` y `mbstring`.
 
 En la terminal de cPanel:
 

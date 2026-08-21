@@ -7,7 +7,7 @@ namespace App\Config;
 use App\Infrastructure\SettingsRepository;
 use App\Support\Env;
 
-final readonly class IntegrationConfig
+final class IntegrationConfig
 {
     public const CONTROL_STATUS = 'Estado sincronización';
     public const CONTROL_DEAL_ID = 'ID negociación Bitrix';

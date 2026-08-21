@@ -3,6 +3,7 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/sheetsxbitrix/public_html
     - /bin/mkdir -p "$DEPLOYPATH/app/Infrastructure"
+    - /bin/mkdir -p "$DEPLOYPATH/app/Config"
     - /bin/mkdir -p "$DEPLOYPATH/app/Sync"
     - /bin/mkdir -p "$DEPLOYPATH/docs"
     - /bin/mkdir -p "$DEPLOYPATH/public"
@@ -12,6 +13,7 @@ deployment:
     - /bin/cp -f README.md "$DEPLOYPATH/README.md"
     - /bin/cp -f composer.json "$DEPLOYPATH/composer.json"
     - /bin/cp -f composer.lock "$DEPLOYPATH/composer.lock"
+    - /bin/cp -f app/Config/IntegrationConfig.php "$DEPLOYPATH/app/Config/IntegrationConfig.php"
     - /bin/cp -f app/Infrastructure/Database.php "$DEPLOYPATH/app/Infrastructure/Database.php"
     - /bin/cp -f app/Infrastructure/ProcessedRowRepository.php "$DEPLOYPATH/app/Infrastructure/ProcessedRowRepository.php"
     - /bin/cp -f app/Sync/SyncService.php "$DEPLOYPATH/app/Sync/SyncService.php"
