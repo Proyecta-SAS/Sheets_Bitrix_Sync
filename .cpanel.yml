@@ -10,6 +10,8 @@ deployment:
     - /bin/mkdir -p "$DEPLOYPATH/views"
     - /bin/cp -f .htaccess "$DEPLOYPATH/.htaccess"
     - /bin/cp -f README.md "$DEPLOYPATH/README.md"
+    - /bin/cp -f composer.json "$DEPLOYPATH/composer.json"
+    - /bin/cp -f composer.lock "$DEPLOYPATH/composer.lock"
     - /bin/cp -f app/Infrastructure/Database.php "$DEPLOYPATH/app/Infrastructure/Database.php"
     - /bin/cp -f app/Infrastructure/ProcessedRowRepository.php "$DEPLOYPATH/app/Infrastructure/ProcessedRowRepository.php"
     - /bin/cp -f app/Sync/SyncService.php "$DEPLOYPATH/app/Sync/SyncService.php"
@@ -19,3 +21,4 @@ deployment:
     - /bin/cp -f tests/run.php "$DEPLOYPATH/tests/run.php"
     - /bin/cp -f views/dashboard.php "$DEPLOYPATH/views/dashboard.php"
     - /bin/cp -f views/portal.php "$DEPLOYPATH/views/portal.php"
+    - cd "$DEPLOYPATH" && if command -v composer >/dev/null 2>&1; then composer install --no-dev --optimize-autoloader; elif [ -x /opt/cpanel/composer/bin/composer ]; then /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader; else echo "Composer no esta disponible en el servidor. Instale dependencias manualmente o suba vendor/."; fi
