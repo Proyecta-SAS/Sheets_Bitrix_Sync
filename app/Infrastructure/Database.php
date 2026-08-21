@@ -82,5 +82,24 @@ final class Database
                 PRIMARY KEY (bucket_key, window_started_at)
             );
         SQL);
+
+        if (!$this->columnExists('processed_rows', 'bitrix_synced_at')) {
+            $this->pdo->exec('ALTER TABLE processed_rows ADD COLUMN bitrix_synced_at TEXT NULL');
+        }
+        if (!$this->columnExists('processed_rows', 'sheet_synced_at')) {
+            $this->pdo->exec('ALTER TABLE processed_rows ADD COLUMN sheet_synced_at TEXT NULL');
+        }
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        $statement = $this->pdo->query('PRAGMA table_info(' . $table . ')');
+        foreach ($statement->fetchAll() as $row) {
+            if (($row['name'] ?? '') === $column) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

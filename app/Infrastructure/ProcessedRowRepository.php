@@ -102,16 +102,19 @@ final class ProcessedRowRepository
 
     public function markCreated(int $id, string $dealId, string $payloadHash): void
     {
+        $now = gmdate('c');
         $statement = $this->pdo->prepare(<<<'SQL'
             UPDATE processed_rows
             SET status = 'CREADA', deal_id = :deal_id, payload_hash = :payload_hash,
+                bitrix_synced_at = COALESCE(bitrix_synced_at, :bitrix_synced_at),
                 last_error = NULL, lock_token = NULL, locked_at = NULL, updated_at = :updated_at
             WHERE id = :id
         SQL);
         $statement->execute([
             'deal_id' => $dealId,
             'payload_hash' => $payloadHash,
-            'updated_at' => gmdate('c'),
+            'bitrix_synced_at' => $now,
+            'updated_at' => $now,
             'id' => $id,
         ]);
     }
@@ -122,14 +125,16 @@ final class ProcessedRowRepository
         $statement = $this->pdo->prepare(<<<'SQL'
             INSERT INTO processed_rows (
                 spreadsheet_id, sheet_name, row_number, unique_identifier, status, deal_id,
-                attempts, created_at, updated_at
+                attempts, bitrix_synced_at, sheet_synced_at, created_at, updated_at
             ) VALUES (
                 :spreadsheet_id, :sheet_name, :row_number, :unique_identifier, 'CREADA', :deal_id,
-                0, :created_at, :updated_at
+                0, :bitrix_synced_at, :sheet_synced_at, :created_at, :updated_at
             )
             ON CONFLICT(spreadsheet_id, sheet_name, row_number) DO UPDATE SET
                 unique_identifier = excluded.unique_identifier,
                 status = 'CREADA', deal_id = excluded.deal_id,
+                bitrix_synced_at = COALESCE(processed_rows.bitrix_synced_at, excluded.bitrix_synced_at),
+                sheet_synced_at = COALESCE(processed_rows.sheet_synced_at, excluded.sheet_synced_at),
                 last_error = NULL, lock_token = NULL, locked_at = NULL, updated_at = excluded.updated_at
         SQL);
         $statement->execute([
@@ -138,8 +143,29 @@ final class ProcessedRowRepository
             'row_number' => $rowNumber,
             'unique_identifier' => $identifier,
             'deal_id' => $dealId,
+            'bitrix_synced_at' => $now,
+            'sheet_synced_at' => $now,
             'created_at' => $now,
             'updated_at' => $now,
+        ]);
+    }
+
+    public function markSheetSynced(string $spreadsheetId, string $sheetName, int $rowNumber, string $dealId): void
+    {
+        $statement = $this->pdo->prepare(<<<'SQL'
+            UPDATE processed_rows
+            SET status = 'CREADA', deal_id = :deal_id,
+                bitrix_synced_at = COALESCE(bitrix_synced_at, :synced_at),
+                sheet_synced_at = :synced_at,
+                last_error = NULL, lock_token = NULL, locked_at = NULL, updated_at = :synced_at
+            WHERE spreadsheet_id = :spreadsheet_id AND sheet_name = :sheet_name AND row_number = :row_number
+        SQL);
+        $statement->execute([
+            'deal_id' => $dealId,
+            'synced_at' => gmdate('c'),
+            'spreadsheet_id' => $spreadsheetId,
+            'sheet_name' => $sheetName,
+            'row_number' => $rowNumber,
         ]);
     }
 
@@ -200,5 +226,28 @@ final class ProcessedRowRepository
         }
 
         return $counts;
+    }
+
+    public function flowCounts(): array
+    {
+        $row = $this->pdo->query(<<<'SQL'
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN status = 'PENDIENTE' THEN 1 ELSE 0 END) AS pending,
+                SUM(CASE WHEN status = 'PROCESANDO' THEN 1 ELSE 0 END) AS processing,
+                SUM(CASE WHEN status = 'ERROR' THEN 1 ELSE 0 END) AS errors,
+                SUM(CASE WHEN deal_id IS NOT NULL AND deal_id <> '' THEN 1 ELSE 0 END) AS bitrix_created,
+                SUM(CASE WHEN sheet_synced_at IS NOT NULL AND sheet_synced_at <> '' THEN 1 ELSE 0 END) AS sheet_synced
+            FROM processed_rows
+        SQL)->fetch() ?: [];
+
+        return [
+            'total' => (int) ($row['total'] ?? 0),
+            'pending' => (int) ($row['pending'] ?? 0),
+            'processing' => (int) ($row['processing'] ?? 0),
+            'errors' => (int) ($row['errors'] ?? 0),
+            'bitrix_created' => (int) ($row['bitrix_created'] ?? 0),
+            'sheet_synced' => (int) ($row['sheet_synced'] ?? 0),
+        ];
     }
 }

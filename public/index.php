@@ -49,6 +49,24 @@ function goHome(): never
     Response::redirect(($base === '' || $base === '.') ? '/' : $base . '/');
 }
 
+function portalPayload(App\Application $app, int $limit = 100): array
+{
+    $config = $app->config();
+
+    return [
+        'generated_at' => gmdate('c'),
+        'integration' => [
+            'active' => $config->active,
+            'sheet_name' => $config->sheetName,
+            'category_id' => $config->categoryId,
+            'stage_id' => $config->stageId,
+        ],
+        'counts' => $app->rows->counts(),
+        'flow' => $app->rows->flowCounts(),
+        'records' => $app->rows->latest($limit),
+    ];
+}
+
 $path = routePath();
 $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
@@ -133,6 +151,15 @@ if (!$auth->check()) {
     $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php');
     $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
     Response::redirect((($base === '' || $base === '.') ? '' : $base) . '/login');
+}
+
+if ($path === '/api/portal/status') {
+    if ($method !== 'GET') {
+        header('Allow: GET');
+        Response::json(['ok' => false, 'error' => 'Metodo no permitido.'], 405);
+    }
+
+    Response::json(['ok' => true, 'portal' => portalPayload($app)]);
 }
 
 if ($method === 'POST') {
@@ -257,7 +284,7 @@ if ($method === 'POST') {
     goHome();
 }
 
-if ($path !== '/') {
+if (!in_array($path, ['/', '/portal'], true)) {
     http_response_code(404);
     echo 'No encontrado';
     exit;
@@ -266,10 +293,11 @@ if ($path !== '/') {
 $config = $app->config();
 $records = $app->rows->latest(100);
 $counts = $app->rows->counts();
+$flow = $app->rows->flowCounts();
 $logs = $app->logger->latest(50);
 $flashes = $_SESSION['flash'] ?? [];
 unset($_SESSION['flash']);
 $csrf = Csrf::token();
 $knownFields = (array) $app->settings->get('bitrix_field_codes', []);
 
-require $app->root . '/views/dashboard.php';
+require $app->root . ($path === '/portal' ? '/views/portal.php' : '/views/dashboard.php');

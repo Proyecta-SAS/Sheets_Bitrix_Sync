@@ -98,7 +98,9 @@ final class SyncService
             }
 
             if ($local !== null && (string) ($local['deal_id'] ?? '') !== '') {
-                $this->recoverSheetStatus($config, $rowNumber, $identifier, (string) $local['deal_id']);
+                $dealId = (string) $local['deal_id'];
+                $this->recoverSheetStatus($config, $rowNumber, $identifier, $dealId);
+                $this->rows->markSheetSynced($config->spreadsheetId, $config->sheetName, $rowNumber, $dealId);
                 $summary['already_created']++;
                 continue;
             }
@@ -140,6 +142,7 @@ final class SyncService
         if ($claim['state'] === 'created') {
             $dealId = (string) $claim['record']['deal_id'];
             $this->recoverSheetStatus($config, $rowNumber, $identifier, $dealId);
+            $this->rows->markSheetSynced($config->spreadsheetId, $config->sheetName, $rowNumber, $dealId);
 
             return ['row' => $rowNumber, 'status' => 'already_created', 'deal_id' => $dealId];
         }
@@ -201,6 +204,7 @@ final class SyncService
 
         try {
             $this->recoverSheetStatus($config, $rowNumber, $identifier, $dealId);
+            $this->rows->markSheetSynced($config->spreadsheetId, $config->sheetName, $rowNumber, $dealId);
         } catch (\Throwable $exception) {
             // La negociación ya está persistida. El próximo intento solo reparará el estado del Sheet.
             $this->logger->error('sheet.recovery_pending', SensitiveData::clean($exception->getMessage()), [

@@ -161,11 +161,16 @@ $tests['recupera fallo del Sheet después de crear'] = static function (): void 
     $sheets->rows[3] = ['Nombre' => 'Negocio Dos', 'Etapa' => ''];
     $sheets->failCreatedUpdate = true;
     $bitrix = new FakeBitrix();
-    [$sync, , $path] = service($sheets, $bitrix);
+    [$sync, $rows, $path] = service($sheets, $bitrix);
     $first = $sync->run(config());
+    $pendingRecovery = $rows->latest(1)[0] ?? [];
+    expect(($pendingRecovery['deal_id'] ?? '') === '1001', 'Debe guardar el ID de Bitrix antes de reparar Google.');
+    expect(($pendingRecovery['sheet_synced_at'] ?? '') === '', 'El cierre del Sheet debe quedar pendiente.');
     expect($first['created'] === 1, 'La negociación debe persistirse aunque falle Google.');
     $sheets->failCreatedUpdate = false;
     $sync->run(config());
+    $recovered = $rows->latest(1)[0] ?? [];
+    expect(($recovered['sheet_synced_at'] ?? '') !== '', 'Debe marcar el cierre del Sheet al reparar.');
     expect($bitrix->created === 1, 'La recuperación no debe duplicar la negociación.');
     expect($sheets->rows[3][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'El estado debe repararse.');
     @unlink($path);

@@ -15,6 +15,7 @@ Versión actual: **V1.0.0**.
 - Recuperación segura si Bitrix responde pero falla la actualización de Google Sheets.
 - Sincronización por cron, webhook protegido o botón manual.
 - Administración responsive con autenticación, CSRF, registros y reintentos.
+- Portal de monitoreo en `/portal` para ver el avance de cada negociación por etapas.
 
 ## Requisitos
 

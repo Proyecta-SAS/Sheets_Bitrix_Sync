@@ -24,7 +24,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
     </style>
 </head>
 <body>
-<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="logo">SB</div>Sheets → Bitrix24 <span class="muted code">V<?= h(App\Application::VERSION) ?></span></div><form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form></div></header>
+<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="logo">SB</div>Sheets → Bitrix24 <span class="muted code">V<?= h(App\Application::VERSION) ?></span></div><div class="actions" style="margin-top:0"><a class="btn small" href="portal">Portal</a><form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form></div></div></header>
 <main class="container">
     <section class="hero"><div><h1>Panel de sincronización</h1><div class="muted">Google Sheets → Pipeline PRUEBA TECNOLOGIA</div></div><div class="status <?= $config->active ? '' : 'off' ?>"><span class="dot"></span><?= $config->active ? 'Integración activa' : 'Integración inactiva' ?></div></section>
 
