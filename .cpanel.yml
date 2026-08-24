@@ -17,6 +17,7 @@ deployment:
     - /bin/cp -f app/Config/IntegrationConfig.php "$DEPLOYPATH/app/Config/IntegrationConfig.php"
     - /bin/cp -f app/Infrastructure/Database.php "$DEPLOYPATH/app/Infrastructure/Database.php"
     - /bin/cp -f app/Infrastructure/ProcessedRowRepository.php "$DEPLOYPATH/app/Infrastructure/ProcessedRowRepository.php"
+    - /bin/cp -f app/Infrastructure/RateLimiter.php "$DEPLOYPATH/app/Infrastructure/RateLimiter.php"
     - /bin/cp -f app/Sync/SyncService.php "$DEPLOYPATH/app/Sync/SyncService.php"
     - /bin/cp -f bin/health.php "$DEPLOYPATH/bin/health.php"
     - /bin/cp -f docs/INSTALL.md "$DEPLOYPATH/docs/INSTALL.md"
