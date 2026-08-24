@@ -2,6 +2,9 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/sheetsxbitrix/public_html
+    - export CREDENTIALSPATH=/home/sheetsxbitrix/credentials
+    - /bin/mkdir -p "$CREDENTIALSPATH"
+    - /bin/chmod 700 "$CREDENTIALSPATH"
     - /bin/mkdir -p "$DEPLOYPATH/app/Infrastructure"
     - /bin/mkdir -p "$DEPLOYPATH/app/Config"
     - /bin/mkdir -p "$DEPLOYPATH/app/Sync"
@@ -20,6 +23,7 @@ deployment:
     - /bin/cp -f app/Infrastructure/RateLimiter.php "$DEPLOYPATH/app/Infrastructure/RateLimiter.php"
     - /bin/cp -f app/Sync/SyncService.php "$DEPLOYPATH/app/Sync/SyncService.php"
     - /bin/cp -f bin/health.php "$DEPLOYPATH/bin/health.php"
+    - /bin/cp -f bin/google-health.php "$DEPLOYPATH/bin/google-health.php"
     - /bin/cp -f docs/INSTALL.md "$DEPLOYPATH/docs/INSTALL.md"
     - /bin/cp -f docs/google-apps-script-webhook.js "$DEPLOYPATH/docs/google-apps-script-webhook.js"
     - /bin/cp -f public/index.php "$DEPLOYPATH/public/index.php"

@@ -8,6 +8,10 @@ venv/
 .env
 .env.*
 !.env.example
+credentials/
+*.json
+!composer.json
+db-mensajeria-*
 credentials.json
 token.json
 vendor/
