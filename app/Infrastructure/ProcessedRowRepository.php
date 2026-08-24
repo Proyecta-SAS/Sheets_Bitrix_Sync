@@ -149,7 +149,16 @@ final class ProcessedRowRepository
                     updated_at = :updated_at
                 WHERE spreadsheet_id = :spreadsheet_id AND sheet_name = :sheet_name AND row_number = :row_number
             SQL);
-            $update->execute($values);
+            $update->execute([
+                'spreadsheet_id' => $spreadsheetId,
+                'sheet_name' => $sheetName,
+                'row_number' => $rowNumber,
+                'unique_identifier' => $identifier,
+                'deal_id' => $dealId,
+                'bitrix_synced_at' => $now,
+                'sheet_synced_at' => $now,
+                'updated_at' => $now,
+            ]);
 
             if ($update->rowCount() === 0) {
                 $insert = $this->pdo->prepare(<<<'SQL'
