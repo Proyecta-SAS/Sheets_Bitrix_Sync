@@ -15,6 +15,12 @@ use App\Support\Uuid;
 final class SyncService
 {
     private const ORIGINATOR_ID = 'SHEETS_BITRIX_SYNC';
+    private const CONTACT_COLUMNS = [
+        'name' => 'Nombre',
+        'phone' => 'Teléfono',
+        'email' => 'Correo',
+        'city' => 'Ciudad',
+    ];
 
     public function __construct(
         private readonly SheetsGatewayInterface $sheets,
@@ -165,6 +171,8 @@ final class SyncService
             );
 
             $fields = $this->buildDealFields($config, $values, $identifier);
+            $contactId = $this->bitrix->createContact($this->buildContactFields($values, $identifier, $rowNumber));
+            $fields['CONTACT_ID'] = $contactId;
             $payloadHash = hash('sha256', json_encode($fields, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 
             $dealId = $this->bitrix->findDealByOrigin(self::ORIGINATOR_ID, $identifier);
@@ -214,6 +222,45 @@ final class SyncService
         }
 
         return ['row' => $rowNumber, 'status' => 'created', 'deal_id' => $dealId];
+    }
+
+    private function buildContactFields(array $values, string $identifier, int $rowNumber): array
+    {
+        $name = trim((string) ($values[self::CONTACT_COLUMNS['name']] ?? ''));
+        if ($name === '') {
+            throw new \InvalidArgumentException('La fila no tiene un valor para crear el contacto en la columna Nombre.');
+        }
+
+        $fields = [
+            'NAME' => $name,
+            'ORIGINATOR_ID' => self::ORIGINATOR_ID,
+            'ORIGIN_ID' => $identifier . ':contact:' . $rowNumber,
+        ];
+
+        $phone = trim((string) ($values[self::CONTACT_COLUMNS['phone']] ?? ''));
+        if ($phone !== '') {
+            $fields['PHONE'] = [[
+                'VALUE' => $phone,
+                'VALUE_TYPE' => 'WORK',
+            ]];
+        }
+
+        $email = trim((string) ($values[self::CONTACT_COLUMNS['email']] ?? ''));
+        if ($email !== '') {
+            $fields['EMAIL'] = [[
+                'VALUE' => $email,
+                'VALUE_TYPE' => 'WORK',
+            ]];
+        }
+
+        $city = trim((string) ($values[self::CONTACT_COLUMNS['city']] ?? ''));
+        if ($city !== '') {
+            $fields['ADDRESS_CITY'] = $city;
+        }
+
+        ksort($fields);
+
+        return $fields;
     }
 
     private function buildDealFields(IntegrationConfig $config, array $values, string $identifier): array

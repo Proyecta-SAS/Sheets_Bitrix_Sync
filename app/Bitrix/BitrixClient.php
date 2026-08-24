@@ -58,6 +58,20 @@ final class BitrixClient implements BitrixGatewayInterface
         return (string) $result;
     }
 
+    public function createContact(array $fields): string
+    {
+        $result = $this->call('crm.contact.add', [
+            'fields' => $fields,
+            'params' => ['REGISTER_SONET_EVENT' => 'N'],
+        ]);
+
+        if (!is_int($result) && !is_string($result)) {
+            throw new \RuntimeException('Bitrix24 no devolviÃ³ el ID del contacto.');
+        }
+
+        return (string) $result;
+    }
+
     private function call(string $method, array $parameters = []): mixed
     {
         $base = rtrim(trim($this->webhookUrl), '/');

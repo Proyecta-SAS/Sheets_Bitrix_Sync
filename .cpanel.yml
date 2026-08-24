@@ -5,6 +5,7 @@ deployment:
     - export CREDENTIALSPATH=/home/sheetsxbitrix/credentials
     - /bin/mkdir -p "$CREDENTIALSPATH"
     - /bin/chmod 700 "$CREDENTIALSPATH"
+    - /bin/mkdir -p "$DEPLOYPATH/app/Bitrix"
     - /bin/mkdir -p "$DEPLOYPATH/app/Infrastructure"
     - /bin/mkdir -p "$DEPLOYPATH/app/Config"
     - /bin/mkdir -p "$DEPLOYPATH/app/Sync"
@@ -17,6 +18,8 @@ deployment:
     - /bin/cp -f README.md "$DEPLOYPATH/README.md"
     - /bin/cp -f composer.json "$DEPLOYPATH/composer.json"
     - /bin/cp -f composer.lock "$DEPLOYPATH/composer.lock"
+    - /bin/cp -f app/Bitrix/BitrixClient.php "$DEPLOYPATH/app/Bitrix/BitrixClient.php"
+    - /bin/cp -f app/Bitrix/BitrixGatewayInterface.php "$DEPLOYPATH/app/Bitrix/BitrixGatewayInterface.php"
     - /bin/cp -f app/Config/IntegrationConfig.php "$DEPLOYPATH/app/Config/IntegrationConfig.php"
     - /bin/cp -f app/Infrastructure/Database.php "$DEPLOYPATH/app/Infrastructure/Database.php"
     - /bin/cp -f app/Infrastructure/ProcessedRowRepository.php "$DEPLOYPATH/app/Infrastructure/ProcessedRowRepository.php"

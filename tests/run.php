@@ -15,7 +15,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 final class FakeSheets implements SheetsGatewayInterface
 {
-    public array $headers = ['Nombre', 'Etapa'];
+    public array $headers = ['Nombre', 'Teléfono', 'Correo', 'Ciudad', 'Etapa'];
     public array $rows = [];
     public bool $failCreatedUpdate = false;
 
@@ -70,6 +70,9 @@ final class FakeSheets implements SheetsGatewayInterface
 final class FakeBitrix implements BitrixGatewayInterface
 {
     public int $created = 0;
+    public int $contactsCreated = 0;
+    public array $contacts = [];
+    public array $deals = [];
     private array $byOrigin = [];
 
     public function testConnection(): array
@@ -92,8 +95,17 @@ final class FakeBitrix implements BitrixGatewayInterface
         $this->created++;
         $id = (string) (1000 + $this->created);
         $this->byOrigin[$fields['ORIGINATOR_ID'] . ':' . $fields['ORIGIN_ID']] = $id;
+        $this->deals[] = $fields;
 
         return $id;
+    }
+
+    public function createContact(array $fields): string
+    {
+        $this->contactsCreated++;
+        $this->contacts[] = $fields;
+
+        return (string) (5000 + $this->contactsCreated);
     }
 }
 
@@ -144,7 +156,7 @@ $tests['convierte columnas A1'] = static function (): void {
 
 $tests['crea y no duplica'] = static function (): void {
     $sheets = new FakeSheets();
-    $sheets->rows[2] = ['Nombre' => 'Negocio Uno', 'Etapa' => 'C216:UC_Y5905W'];
+    $sheets->rows[2] = ['Nombre' => 'Negocio Uno', 'Teléfono' => '3001234567', 'Correo' => 'uno@test.local', 'Ciudad' => 'Bogota', 'Etapa' => 'C216:UC_Y5905W'];
     $bitrix = new FakeBitrix();
     [$sync, , $path] = service($sheets, $bitrix);
     $first = $sync->run(config());
@@ -152,13 +164,19 @@ $tests['crea y no duplica'] = static function (): void {
     expect($first['created'] === 1, 'Debe crear una negociación.');
     expect($second['created'] === 0, 'El segundo ciclo no debe crear otra negociación.');
     expect($bitrix->created === 1, 'Bitrix solo debe recibir una creación.');
+    expect($bitrix->contactsCreated === 1, 'Debe crear un contacto antes de la negociacion.');
+    expect(($bitrix->deals[0]['CONTACT_ID'] ?? '') === '5001', 'La negociacion debe quedar asociada al contacto.');
+    expect(($bitrix->contacts[0]['NAME'] ?? '') === 'Negocio Uno', 'El contacto debe usar la columna Nombre.');
+    expect(($bitrix->contacts[0]['PHONE'][0]['VALUE'] ?? '') === '3001234567', 'El contacto debe incluir telefono.');
+    expect(($bitrix->contacts[0]['EMAIL'][0]['VALUE'] ?? '') === 'uno@test.local', 'El contacto debe incluir correo.');
+    expect(($bitrix->contacts[0]['ADDRESS_CITY'] ?? '') === 'Bogota', 'El contacto debe incluir ciudad.');
     expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'La fila debe quedar CREADA.');
     @unlink($path);
 };
 
 $tests['recupera fallo del Sheet después de crear'] = static function (): void {
     $sheets = new FakeSheets();
-    $sheets->rows[3] = ['Nombre' => 'Negocio Dos', 'Etapa' => ''];
+    $sheets->rows[3] = ['Nombre' => 'Negocio Dos', 'Teléfono' => '3002222222', 'Correo' => 'dos@test.local', 'Ciudad' => 'Cali', 'Etapa' => ''];
     $sheets->failCreatedUpdate = true;
     $bitrix = new FakeBitrix();
     [$sync, $rows, $path] = service($sheets, $bitrix);
@@ -172,6 +190,7 @@ $tests['recupera fallo del Sheet después de crear'] = static function (): void 
     $recovered = $rows->latest(1)[0] ?? [];
     expect(($recovered['sheet_synced_at'] ?? '') !== '', 'Debe marcar el cierre del Sheet al reparar.');
     expect($bitrix->created === 1, 'La recuperación no debe duplicar la negociación.');
+    expect($bitrix->contactsCreated === 1, 'La recuperacion no debe duplicar el contacto.');
     expect($sheets->rows[3][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'El estado debe repararse.');
     @unlink($path);
 };
@@ -195,6 +214,7 @@ $tests['registra error de validación'] = static function (): void {
     $result = $sync->run(config());
     expect($result['errors'] === 1, 'La fila sin TITLE debe fallar.');
     expect($bitrix->created === 0, 'No debe llamar a crm.deal.add.');
+    expect($bitrix->contactsCreated === 0, 'No debe llamar a crm.contact.add.');
     expect($sheets->rows[4][IntegrationConfig::CONTROL_STATUS] === 'ERROR', 'La fila debe quedar en ERROR.');
     @unlink($path);
 };

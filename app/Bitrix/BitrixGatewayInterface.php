@@ -12,5 +12,7 @@ interface BitrixGatewayInterface
 
     public function findDealByOrigin(string $originatorId, string $originId): ?string;
 
+    public function createContact(array $fields): string;
+
     public function createDeal(array $fields): string;
 }
