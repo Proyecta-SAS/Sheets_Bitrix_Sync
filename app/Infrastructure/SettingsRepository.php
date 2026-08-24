@@ -30,16 +30,28 @@ final class SettingsRepository
     public function set(string $key, mixed $value): void
     {
         $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-        $statement = $this->pdo->prepare(<<<'SQL'
-            INSERT INTO settings (key, value, updated_at)
-            VALUES (:key, :value, :updated_at)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
-        SQL);
-        $statement->execute([
+        $values = [
             'key' => $key,
             'value' => $encoded,
             'updated_at' => gmdate('c'),
-        ]);
+        ];
+
+        $update = $this->pdo->prepare(<<<'SQL'
+            UPDATE settings
+            SET value = :value, updated_at = :updated_at
+            WHERE key = :key
+        SQL);
+        $update->execute($values);
+
+        if ($update->rowCount() > 0) {
+            return;
+        }
+
+        $insert = $this->pdo->prepare(<<<'SQL'
+            INSERT INTO settings (key, value, updated_at)
+            VALUES (:key, :value, :updated_at)
+        SQL);
+        $insert->execute($values);
     }
 
     public function setMany(array $values): void

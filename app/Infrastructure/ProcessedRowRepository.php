@@ -122,22 +122,7 @@ final class ProcessedRowRepository
     public function reconcileCreated(string $spreadsheetId, string $sheetName, int $rowNumber, string $identifier, string $dealId): void
     {
         $now = gmdate('c');
-        $statement = $this->pdo->prepare(<<<'SQL'
-            INSERT INTO processed_rows (
-                spreadsheet_id, sheet_name, row_number, unique_identifier, status, deal_id,
-                attempts, bitrix_synced_at, sheet_synced_at, created_at, updated_at
-            ) VALUES (
-                :spreadsheet_id, :sheet_name, :row_number, :unique_identifier, 'CREADA', :deal_id,
-                0, :bitrix_synced_at, :sheet_synced_at, :created_at, :updated_at
-            )
-            ON CONFLICT(spreadsheet_id, sheet_name, row_number) DO UPDATE SET
-                unique_identifier = excluded.unique_identifier,
-                status = 'CREADA', deal_id = excluded.deal_id,
-                bitrix_synced_at = COALESCE(processed_rows.bitrix_synced_at, excluded.bitrix_synced_at),
-                sheet_synced_at = COALESCE(processed_rows.sheet_synced_at, excluded.sheet_synced_at),
-                last_error = NULL, lock_token = NULL, locked_at = NULL, updated_at = excluded.updated_at
-        SQL);
-        $statement->execute([
+        $values = [
             'spreadsheet_id' => $spreadsheetId,
             'sheet_name' => $sheetName,
             'row_number' => $rowNumber,
@@ -147,7 +132,45 @@ final class ProcessedRowRepository
             'sheet_synced_at' => $now,
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+
+        $this->pdo->beginTransaction();
+        try {
+            $update = $this->pdo->prepare(<<<'SQL'
+                UPDATE processed_rows
+                SET unique_identifier = :unique_identifier,
+                    status = 'CREADA',
+                    deal_id = :deal_id,
+                    bitrix_synced_at = COALESCE(bitrix_synced_at, :bitrix_synced_at),
+                    sheet_synced_at = COALESCE(sheet_synced_at, :sheet_synced_at),
+                    last_error = NULL,
+                    lock_token = NULL,
+                    locked_at = NULL,
+                    updated_at = :updated_at
+                WHERE spreadsheet_id = :spreadsheet_id AND sheet_name = :sheet_name AND row_number = :row_number
+            SQL);
+            $update->execute($values);
+
+            if ($update->rowCount() === 0) {
+                $insert = $this->pdo->prepare(<<<'SQL'
+                    INSERT INTO processed_rows (
+                        spreadsheet_id, sheet_name, row_number, unique_identifier, status, deal_id,
+                        attempts, bitrix_synced_at, sheet_synced_at, created_at, updated_at
+                    ) VALUES (
+                        :spreadsheet_id, :sheet_name, :row_number, :unique_identifier, 'CREADA', :deal_id,
+                        0, :bitrix_synced_at, :sheet_synced_at, :created_at, :updated_at
+                    )
+                SQL);
+                $insert->execute($values);
+            }
+
+            $this->pdo->commit();
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     public function markSheetSynced(string $spreadsheetId, string $sheetName, int $rowNumber, string $dealId): void
