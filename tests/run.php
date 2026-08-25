@@ -73,6 +73,7 @@ final class FakeBitrix implements BitrixGatewayInterface
     public int $contactsCreated = 0;
     public array $contacts = [];
     public array $deals = [];
+    public array $dealUpdates = [];
     private array $byOrigin = [];
 
     public function testConnection(): array
@@ -98,6 +99,11 @@ final class FakeBitrix implements BitrixGatewayInterface
         $this->deals[] = $fields;
 
         return $id;
+    }
+
+    public function updateDeal(string $dealId, array $fields): void
+    {
+        $this->dealUpdates[] = ['id' => $dealId, 'fields' => $fields];
     }
 
     public function createContact(array $fields): string
@@ -196,6 +202,7 @@ $tests['crea y no duplica'] = static function (): void {
     expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por nombre.');
     expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por nombre.');
     expect(($bitrix->deals[0]['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe asignar observador por nombre.');
+    expect(($bitrix->dealUpdates[0]['fields']['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe sincronizar observadores despues de crear.');
     expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'La fila debe quedar CREADA.');
     @unlink($path);
 };
@@ -216,6 +223,7 @@ $tests['asigna usuarios por defecto cuando vienen vacios'] = static function ():
     expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por defecto.');
     expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por defecto.');
     expect(($bitrix->deals[0]['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe asignar observador por defecto.');
+    expect(($bitrix->dealUpdates[0]['fields']['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe sincronizar observador por defecto despues de crear.');
     @unlink($path);
 };
 

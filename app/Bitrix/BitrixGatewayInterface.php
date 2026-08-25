@@ -15,4 +15,6 @@ interface BitrixGatewayInterface
     public function createContact(array $fields): string;
 
     public function createDeal(array $fields): string;
+
+    public function updateDeal(string $dealId, array $fields): void;
 }

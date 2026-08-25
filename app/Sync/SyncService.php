@@ -207,6 +207,7 @@ final class SyncService
             if ($dealId === null) {
                 $dealId = $this->bitrix->createDeal($fields);
             }
+            $this->syncDealObservers($dealId, $fields);
 
             // Se persiste antes de tocar nuevamente Google Sheets: es la barrera principal contra duplicados.
             $this->rows->markCreated($recordId, $dealId, $payloadHash);
@@ -380,6 +381,16 @@ final class SyncService
         $observerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['observer']] ?? ''))
             ?? self::DEFAULT_USER_IDS['observer'];
         $fields[self::DEAL_OBSERVER_FIELD] = [$observerId];
+    }
+
+    private function syncDealObservers(string $dealId, array $fields): void
+    {
+        $observerIds = $fields[self::DEAL_OBSERVER_FIELD] ?? [];
+        if (is_array($observerIds) && $observerIds !== []) {
+            $this->bitrix->updateDeal($dealId, [
+                self::DEAL_OBSERVER_FIELD => $observerIds,
+            ]);
+        }
     }
 
     private function resolveUserId(string $name): ?string

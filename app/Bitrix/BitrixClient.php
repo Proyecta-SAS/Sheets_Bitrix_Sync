@@ -58,6 +58,15 @@ final class BitrixClient implements BitrixGatewayInterface
         return (string) $result;
     }
 
+    public function updateDeal(string $dealId, array $fields): void
+    {
+        $this->call('crm.deal.update', [
+            'id' => $dealId,
+            'fields' => $fields,
+            'params' => ['REGISTER_SONET_EVENT' => 'N'],
+        ]);
+    }
+
     public function createContact(array $fields): string
     {
         $result = $this->call('crm.contact.add', [
