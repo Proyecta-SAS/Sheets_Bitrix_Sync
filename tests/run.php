@@ -200,6 +200,25 @@ $tests['crea y no duplica'] = static function (): void {
     @unlink($path);
 };
 
+$tests['asigna usuarios por defecto cuando vienen vacios'] = static function (): void {
+    $sheets = new FakeSheets();
+    $sheets->rows[2] = [
+        'Nombre(Name)' => 'Negocio Sin Usuarios',
+        'Teléfono(telefono)' => '3001234567',
+        'Email(email)' => 'sinusuarios@test.local',
+        'RESPONSABLE' => '',
+        'REFERENCIADOR' => '',
+        'OBSERVADOR' => '',
+    ];
+    $bitrix = new FakeBitrix();
+    [$sync, , $path] = service($sheets, $bitrix);
+    $sync->run(config(['Nombre(Name)' => 'TITLE'], ['Nombre(Name)']));
+    expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por defecto.');
+    expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por defecto.');
+    expect(($bitrix->deals[0]['OBSERVER'] ?? '') === '21026', 'La negociacion debe asignar observador por defecto.');
+    @unlink($path);
+};
+
 $tests['recupera fallo del Sheet después de crear'] = static function (): void {
     $sheets = new FakeSheets();
     $sheets->rows[3] = ['Nombre' => 'Negocio Dos', 'Teléfono' => '3002222222', 'Correo' => 'dos@test.local', 'Ciudad' => 'Cali', 'Etapa' => ''];

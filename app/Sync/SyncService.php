@@ -44,6 +44,11 @@ final class SyncService
         'daniel maestre antequera' => '2582',
         'one credit sas' => '21026',
     ];
+    private const DEFAULT_USER_IDS = [
+        'responsible' => '2582',
+        'referencer' => '21026',
+        'observer' => '21026',
+    ];
 
     public function __construct(
         private readonly SheetsGatewayInterface $sheets,
@@ -364,20 +369,17 @@ final class SyncService
 
     private function applyUserBindings(array &$fields, array $values): void
     {
-        $responsibleId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['responsible']] ?? ''));
-        if ($responsibleId !== null) {
-            $fields['ASSIGNED_BY_ID'] = $responsibleId;
-        }
+        $responsibleId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['responsible']] ?? ''))
+            ?? self::DEFAULT_USER_IDS['responsible'];
+        $fields['ASSIGNED_BY_ID'] = $responsibleId;
 
-        $referencerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['referencer']] ?? ''));
-        if ($referencerId !== null) {
-            $fields[self::DEAL_REFERENCER_FIELD] = $referencerId;
-        }
+        $referencerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['referencer']] ?? ''))
+            ?? self::DEFAULT_USER_IDS['referencer'];
+        $fields[self::DEAL_REFERENCER_FIELD] = $referencerId;
 
-        $observerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['observer']] ?? ''));
-        if ($observerId !== null) {
-            $fields[self::DEAL_OBSERVER_FIELD] = $observerId;
-        }
+        $observerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['observer']] ?? ''))
+            ?? self::DEFAULT_USER_IDS['observer'];
+        $fields[self::DEAL_OBSERVER_FIELD] = $observerId;
     }
 
     private function resolveUserId(string $name): ?string
