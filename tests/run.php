@@ -156,7 +156,17 @@ $tests['convierte columnas A1'] = static function (): void {
 
 $tests['crea y no duplica'] = static function (): void {
     $sheets = new FakeSheets();
-    $sheets->rows[2] = ['Nombre' => 'Negocio Uno', 'Teléfono' => '3001234567', 'Correo' => 'uno@test.local', 'Ciudad' => 'Bogota', 'Etapa' => 'C216:UC_Y5905W'];
+    $sheets->rows[2] = [
+        'Nombre' => 'Negocio Uno',
+        'Teléfono' => '3001234567',
+        'Correo' => 'uno@test.local',
+        'Ciudad' => 'Bogota',
+        'Etapa' => 'C216:UC_Y5905W',
+        'TELÉFONO CLIENTE (DEF)' => '3101234567',
+        'CORREO CLIENTE (DEF)' => '',
+        'Estado del crédito (al día?)(estado_del_credito_al_dia)' => 'Si',
+        'Nombre del banco(nombre_del_banco)' => 'Banco Uno',
+    ];
     $bitrix = new FakeBitrix();
     [$sync, , $path] = service($sheets, $bitrix);
     $first = $sync->run(config());
@@ -167,9 +177,12 @@ $tests['crea y no duplica'] = static function (): void {
     expect($bitrix->contactsCreated === 1, 'Debe crear un contacto antes de la negociacion.');
     expect(($bitrix->deals[0]['CONTACT_ID'] ?? '') === '5001', 'La negociacion debe quedar asociada al contacto.');
     expect(($bitrix->contacts[0]['NAME'] ?? '') === 'Negocio Uno', 'El contacto debe usar la columna Nombre.');
-    expect(($bitrix->contacts[0]['PHONE'][0]['VALUE'] ?? '') === '3001234567', 'El contacto debe incluir telefono.');
+    expect(($bitrix->contacts[0]['PHONE'][0]['VALUE'] ?? '') === '3101234567', 'El contacto debe incluir telefono.');
     expect(($bitrix->contacts[0]['EMAIL'][0]['VALUE'] ?? '') === 'uno@test.local', 'El contacto debe incluir correo.');
     expect(($bitrix->contacts[0]['ADDRESS_CITY'] ?? '') === 'Bogota', 'El contacto debe incluir ciudad.');
+    expect(($bitrix->deals[0]['COMMENTS'] ?? '') === "Esta el credito al dia: Si\n\nBanco: Banco Uno", 'La negociacion debe incluir el comentario armado.');
+    expect(($bitrix->deals[0]['UF_CRM_1584616588730'] ?? '') === '3101234567', 'La negociacion debe incluir telefono cliente.');
+    expect(($bitrix->deals[0]['UF_CRM_1584616599364'] ?? '') === 'sin correo', 'La negociacion debe usar sin correo cuando el correo real viene vacio.');
     expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'La fila debe quedar CREADA.');
     @unlink($path);
 };

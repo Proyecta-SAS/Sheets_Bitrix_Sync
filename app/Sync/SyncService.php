@@ -21,6 +21,13 @@ final class SyncService
         'email' => 'Correo',
         'city' => 'Ciudad',
     ];
+    private const REAL_CONTACT_COLUMNS = [
+        'phone' => 'TELÉFONO CLIENTE (DEF)',
+        'email' => 'CORREO CLIENTE (DEF)',
+    ];
+    private const DEAL_PHONE_FIELD = 'UF_CRM_1584616588730';
+    private const DEAL_EMAIL_FIELD = 'UF_CRM_1584616599364';
+    private const NO_EMAIL_VALUE = 'sin correo';
 
     public function __construct(
         private readonly SheetsGatewayInterface $sheets,
@@ -237,7 +244,10 @@ final class SyncService
             'ORIGIN_ID' => $identifier . ':contact:' . $rowNumber,
         ];
 
-        $phone = trim((string) ($values[self::CONTACT_COLUMNS['phone']] ?? ''));
+        $phone = $this->firstValue($values, [
+            self::REAL_CONTACT_COLUMNS['phone'],
+            self::CONTACT_COLUMNS['phone'],
+        ]);
         if ($phone !== '') {
             $fields['PHONE'] = [[
                 'VALUE' => $phone,
@@ -245,7 +255,10 @@ final class SyncService
             ]];
         }
 
-        $email = trim((string) ($values[self::CONTACT_COLUMNS['email']] ?? ''));
+        $email = $this->firstValue($values, [
+            self::REAL_CONTACT_COLUMNS['email'],
+            self::CONTACT_COLUMNS['email'],
+        ]);
         if ($email !== '') {
             $fields['EMAIL'] = [[
                 'VALUE' => $email,
@@ -273,6 +286,18 @@ final class SyncService
             }
         }
 
+        $fields['COMMENTS'] = $this->buildDealComment($values);
+        $phone = $this->firstValue($values, [
+            self::REAL_CONTACT_COLUMNS['phone'],
+            self::CONTACT_COLUMNS['phone'],
+        ]);
+        if ($phone !== '') {
+            $fields[self::DEAL_PHONE_FIELD] = $phone;
+        }
+        $fields[self::DEAL_EMAIL_FIELD] = $this->firstValue($values, [
+            self::REAL_CONTACT_COLUMNS['email'],
+        ], self::NO_EMAIL_VALUE);
+
         if (trim((string) ($fields['TITLE'] ?? '')) === '') {
             throw new \InvalidArgumentException('La fila no tiene un valor para TITLE.');
         }
@@ -290,6 +315,38 @@ final class SyncService
         ksort($fields);
 
         return $fields;
+    }
+
+    private function buildDealComment(array $values): string
+    {
+        $creditStatus = $this->firstValue($values, [
+            'Estado del crédito (al día?)(estado_del_credito_al_dia)',
+            'Estado del crédito (al día?)',
+            'estado_del_credito_al_dia',
+        ]);
+        $bank = $this->firstValue($values, [
+            'Nombre del banco(nombre_del_banco)',
+            'Nombre del banco',
+            'nombre_del_banco',
+        ]);
+
+        return sprintf(
+            "Esta el credito al dia: %s\n\nBanco: %s",
+            $creditStatus,
+            $bank,
+        );
+    }
+
+    private function firstValue(array $values, array $columns, string $default = ''): string
+    {
+        foreach ($columns as $column) {
+            $value = trim((string) ($values[$column] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return $default;
     }
 
     private function recoverSheetStatus(IntegrationConfig $config, int $rowNumber, string $identifier, string $dealId): void

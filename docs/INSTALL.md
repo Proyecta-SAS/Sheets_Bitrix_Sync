@@ -162,11 +162,15 @@ En Google Sheets:
    WEBHOOK_SECRET=el_mismo_valor_de_WEBHOOK_SECRET
    HEADER_ROW=1
    REQUIRED_HEADERS=Nombre
+   SHEET_NAME=Nombre exacto de la pestana
    ```
 
 4. Ejecute una vez `installTriggers()` y acepte los permisos.
+5. Agregue una fila nueva al final del Sheet para probar el disparo automatico.
 
-`REQUIRED_HEADERS` evita disparar la integracion con filas incompletas. Si la hoja real usa otro encabezado obligatorio para el titulo de la negociacion, cambielo por ese nombre. No dependa exclusivamente de `onEdit`: mantenga el cron como mecanismo de respaldo.
+El script instala tres disparadores: edicion manual, envio de formulario y cambios de estructura/fila. Cuando detecta una fila nueva al final, llama a HostGator con el numero de fila para que la aplicacion cree el contacto y la negociacion.
+
+`REQUIRED_HEADERS` evita disparar la integracion con filas incompletas. Si la hoja real usa otro encabezado obligatorio para el titulo de la negociacion, cambielo por ese nombre. `SHEET_NAME` es opcional, pero se recomienda configurarlo cuando el documento tiene mas de una pestana. Mantenga el cron como mecanismo de respaldo.
 
 ## 8. Columnas de control e idempotencia
 
