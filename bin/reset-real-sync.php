@@ -52,6 +52,7 @@ try {
     $bitrixErrors = 0;
     if ($deleteBitrix) {
         foreach ($deals as $dealId => $source) {
+            $dealId = (string) $dealId;
             try {
                 $deal = $bitrix->getDeal($dealId);
                 $contactId = trim((string) ($deal['CONTACT_ID'] ?? ''));
