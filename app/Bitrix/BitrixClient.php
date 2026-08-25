@@ -60,6 +60,21 @@ final class BitrixClient implements BitrixGatewayInterface
 
     public function updateDeal(string $dealId, array $fields): void
     {
+        if (isset($fields['OBSERVER_IDS'])) {
+            $this->call('crm.item.update', [
+                'entityTypeId' => 2,
+                'id' => $dealId,
+                'fields' => [
+                    'observers' => array_map('intval', (array) $fields['OBSERVER_IDS']),
+                ],
+            ]);
+            unset($fields['OBSERVER_IDS']);
+        }
+
+        if ($fields === []) {
+            return;
+        }
+
         $this->call('crm.deal.update', [
             'id' => $dealId,
             'fields' => $fields,
