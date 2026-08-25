@@ -195,7 +195,7 @@ $tests['crea y no duplica'] = static function (): void {
     expect(($bitrix->deals[0]['UF_CRM_1584616599364'] ?? '') === 'uno@test.local', 'La negociacion debe incluir el correo real.');
     expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por nombre.');
     expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por nombre.');
-    expect(($bitrix->deals[0]['OBSERVER'] ?? '') === '21026', 'La negociacion debe asignar observador por nombre.');
+    expect(($bitrix->deals[0]['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe asignar observador por nombre.');
     expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'La fila debe quedar CREADA.');
     @unlink($path);
 };
@@ -215,7 +215,7 @@ $tests['asigna usuarios por defecto cuando vienen vacios'] = static function ():
     $sync->run(config(['Nombre(Name)' => 'TITLE'], ['Nombre(Name)']));
     expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por defecto.');
     expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por defecto.');
-    expect(($bitrix->deals[0]['OBSERVER'] ?? '') === '21026', 'La negociacion debe asignar observador por defecto.');
+    expect(($bitrix->deals[0]['OBSERVER_IDS'][0] ?? '') === '21026', 'La negociacion debe asignar observador por defecto.');
     @unlink($path);
 };
 

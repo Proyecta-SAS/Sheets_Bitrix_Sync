@@ -33,7 +33,7 @@ final class SyncService
     private const DEAL_PHONE_FIELD = 'UF_CRM_1584616588730';
     private const DEAL_EMAIL_FIELD = 'UF_CRM_1584616599364';
     private const DEAL_REFERENCER_FIELD = 'UF_CRM_1589344028';
-    private const DEAL_OBSERVER_FIELD = 'OBSERVER';
+    private const DEAL_OBSERVER_FIELD = 'OBSERVER_IDS';
     private const NO_EMAIL_VALUE = 'sin correo';
     private const USER_COLUMNS = [
         'responsible' => 'RESPONSABLE',
@@ -379,7 +379,7 @@ final class SyncService
 
         $observerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['observer']] ?? ''))
             ?? self::DEFAULT_USER_IDS['observer'];
-        $fields[self::DEAL_OBSERVER_FIELD] = $observerId;
+        $fields[self::DEAL_OBSERVER_FIELD] = [$observerId];
     }
 
     private function resolveUserId(string $name): ?string
