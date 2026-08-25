@@ -129,8 +129,11 @@ function service(FakeSheets $sheets, FakeBitrix $bitrix): array
     return [new SyncService($sheets, $bitrix, $rows, $logger), $rows, $path];
 }
 
-function config(): IntegrationConfig
+function config(?array $mapping = null, ?array $detectedHeaders = null): IntegrationConfig
 {
+    $mapping ??= ['Nombre' => 'TITLE', 'Etapa' => 'STAGE_ID'];
+    $detectedHeaders ??= ['Nombre', 'Etapa'];
+
     return new IntegrationConfig(
         true,
         'spreadsheet-test',
@@ -141,8 +144,8 @@ function config(): IntegrationConfig
         '7',
         25,
         300,
-        ['Nombre' => 'TITLE', 'Etapa' => 'STAGE_ID'],
-        ['Nombre', 'Etapa'],
+        $mapping,
+        $detectedHeaders,
     );
 }
 
@@ -157,20 +160,27 @@ $tests['convierte columnas A1'] = static function (): void {
 $tests['crea y no duplica'] = static function (): void {
     $sheets = new FakeSheets();
     $sheets->rows[2] = [
-        'Nombre' => 'Negocio Uno',
-        'Teléfono' => '3001234567',
-        'Correo' => 'uno@test.local',
+        'Nombre(Name)' => 'Negocio Uno',
+        'Teléfono(telefono)' => '3001234567',
+        'Email(email)' => 'uno@test.local',
         'Ciudad' => 'Bogota',
         'Etapa' => 'C216:UC_Y5905W',
         'TELÉFONO CLIENTE (DEF)' => '3101234567',
         'CORREO CLIENTE (DEF)' => '',
         'Estado del crédito (al día?)(estado_del_credito_al_dia)' => 'Si',
         'Nombre del banco(nombre_del_banco)' => 'Banco Uno',
+        'RESPONSABLE' => 'Daniel Maestre Antequera',
+        'REFERENCIADOR' => 'One Credit SAS',
+        'OBSERVADOR' => 'One Credit SAS',
     ];
     $bitrix = new FakeBitrix();
     [$sync, , $path] = service($sheets, $bitrix);
-    $first = $sync->run(config());
-    $second = $sync->run(config());
+    $config = config(
+        ['Nombre(Name)' => 'TITLE', 'Etapa' => 'STAGE_ID'],
+        ['Nombre(Name)', 'Etapa'],
+    );
+    $first = $sync->run($config);
+    $second = $sync->run($config);
     expect($first['created'] === 1, 'Debe crear una negociación.');
     expect($second['created'] === 0, 'El segundo ciclo no debe crear otra negociación.');
     expect($bitrix->created === 1, 'Bitrix solo debe recibir una creación.');
@@ -182,7 +192,10 @@ $tests['crea y no duplica'] = static function (): void {
     expect(($bitrix->contacts[0]['ADDRESS_CITY'] ?? '') === 'Bogota', 'El contacto debe incluir ciudad.');
     expect(($bitrix->deals[0]['COMMENTS'] ?? '') === "Esta el credito al dia: Si\n\nBanco: Banco Uno", 'La negociacion debe incluir el comentario armado.');
     expect(($bitrix->deals[0]['UF_CRM_1584616588730'] ?? '') === '3101234567', 'La negociacion debe incluir telefono cliente.');
-    expect(($bitrix->deals[0]['UF_CRM_1584616599364'] ?? '') === 'sin correo', 'La negociacion debe usar sin correo cuando el correo real viene vacio.');
+    expect(($bitrix->deals[0]['UF_CRM_1584616599364'] ?? '') === 'uno@test.local', 'La negociacion debe incluir el correo real.');
+    expect(($bitrix->deals[0]['ASSIGNED_BY_ID'] ?? '') === '2582', 'La negociacion debe asignar responsable por nombre.');
+    expect(($bitrix->deals[0]['UF_CRM_1589344028'] ?? '') === '21026', 'La negociacion debe asignar referenciador por nombre.');
+    expect(($bitrix->deals[0]['OBSERVER'] ?? '') === '21026', 'La negociacion debe asignar observador por nombre.');
     expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'La fila debe quedar CREADA.');
     @unlink($path);
 };

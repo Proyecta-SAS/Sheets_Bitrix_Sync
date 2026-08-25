@@ -22,12 +22,28 @@ final class SyncService
         'city' => 'Ciudad',
     ];
     private const REAL_CONTACT_COLUMNS = [
+        'name' => 'Nombre(Name)',
+        'phone' => 'Teléfono(telefono)',
+        'email' => 'Email(email)',
+    ];
+    private const DEF_CONTACT_COLUMNS = [
         'phone' => 'TELÉFONO CLIENTE (DEF)',
         'email' => 'CORREO CLIENTE (DEF)',
     ];
     private const DEAL_PHONE_FIELD = 'UF_CRM_1584616588730';
     private const DEAL_EMAIL_FIELD = 'UF_CRM_1584616599364';
+    private const DEAL_REFERENCER_FIELD = 'UF_CRM_1589344028';
+    private const DEAL_OBSERVER_FIELD = 'OBSERVER';
     private const NO_EMAIL_VALUE = 'sin correo';
+    private const USER_COLUMNS = [
+        'responsible' => 'RESPONSABLE',
+        'referencer' => 'REFERENCIADOR',
+        'observer' => 'OBSERVADOR',
+    ];
+    private const USER_IDS_BY_NAME = [
+        'daniel maestre antequera' => '2582',
+        'one credit sas' => '21026',
+    ];
 
     public function __construct(
         private readonly SheetsGatewayInterface $sheets,
@@ -233,7 +249,10 @@ final class SyncService
 
     private function buildContactFields(array $values, string $identifier, int $rowNumber): array
     {
-        $name = trim((string) ($values[self::CONTACT_COLUMNS['name']] ?? ''));
+        $name = $this->firstValue($values, [
+            self::REAL_CONTACT_COLUMNS['name'],
+            self::CONTACT_COLUMNS['name'],
+        ]);
         if ($name === '') {
             throw new \InvalidArgumentException('La fila no tiene un valor para crear el contacto en la columna Nombre.');
         }
@@ -245,6 +264,7 @@ final class SyncService
         ];
 
         $phone = $this->firstValue($values, [
+            self::DEF_CONTACT_COLUMNS['phone'],
             self::REAL_CONTACT_COLUMNS['phone'],
             self::CONTACT_COLUMNS['phone'],
         ]);
@@ -256,6 +276,7 @@ final class SyncService
         }
 
         $email = $this->firstValue($values, [
+            self::DEF_CONTACT_COLUMNS['email'],
             self::REAL_CONTACT_COLUMNS['email'],
             self::CONTACT_COLUMNS['email'],
         ]);
@@ -288,6 +309,7 @@ final class SyncService
 
         $fields['COMMENTS'] = $this->buildDealComment($values);
         $phone = $this->firstValue($values, [
+            self::DEF_CONTACT_COLUMNS['phone'],
             self::REAL_CONTACT_COLUMNS['phone'],
             self::CONTACT_COLUMNS['phone'],
         ]);
@@ -295,8 +317,11 @@ final class SyncService
             $fields[self::DEAL_PHONE_FIELD] = $phone;
         }
         $fields[self::DEAL_EMAIL_FIELD] = $this->firstValue($values, [
+            self::DEF_CONTACT_COLUMNS['email'],
             self::REAL_CONTACT_COLUMNS['email'],
+            self::CONTACT_COLUMNS['email'],
         ], self::NO_EMAIL_VALUE);
+        $this->applyUserBindings($fields, $values);
 
         if (trim((string) ($fields['TITLE'] ?? '')) === '') {
             throw new \InvalidArgumentException('La fila no tiene un valor para TITLE.');
@@ -307,7 +332,7 @@ final class SyncService
             $fields['STAGE_ID'] = $config->stageId;
         }
         if ($config->assignedById !== '') {
-            $fields['ASSIGNED_BY_ID'] = $config->assignedById;
+            $fields['ASSIGNED_BY_ID'] ??= $config->assignedById;
         }
         $fields['ORIGINATOR_ID'] = self::ORIGINATOR_ID;
         $fields['ORIGIN_ID'] = $identifier;
@@ -335,6 +360,31 @@ final class SyncService
             $creditStatus,
             $bank,
         );
+    }
+
+    private function applyUserBindings(array &$fields, array $values): void
+    {
+        $responsibleId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['responsible']] ?? ''));
+        if ($responsibleId !== null) {
+            $fields['ASSIGNED_BY_ID'] = $responsibleId;
+        }
+
+        $referencerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['referencer']] ?? ''));
+        if ($referencerId !== null) {
+            $fields[self::DEAL_REFERENCER_FIELD] = $referencerId;
+        }
+
+        $observerId = $this->resolveUserId((string) ($values[self::USER_COLUMNS['observer']] ?? ''));
+        if ($observerId !== null) {
+            $fields[self::DEAL_OBSERVER_FIELD] = $observerId;
+        }
+    }
+
+    private function resolveUserId(string $name): ?string
+    {
+        $key = strtolower(preg_replace('/\s+/', ' ', trim($name)) ?? '');
+
+        return self::USER_IDS_BY_NAME[$key] ?? null;
     }
 
     private function firstValue(array $values, array $columns, string $default = ''): string
