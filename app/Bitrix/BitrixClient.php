@@ -44,6 +44,25 @@ final class BitrixClient implements BitrixGatewayInterface
         return (string) $result[0]['ID'];
     }
 
+    public function countDealsByFieldValue(string $field, string $value): int
+    {
+        $response = $this->callEnvelope('crm.deal.list', [
+            'filter' => [
+                '=' . $field => $value,
+            ],
+            'select' => ['ID'],
+            'start' => 0,
+        ]);
+
+        if (isset($response['total']) && is_numeric($response['total'])) {
+            return (int) $response['total'];
+        }
+
+        $result = $response['result'] ?? [];
+
+        return is_array($result) ? count($result) : 0;
+    }
+
     public function createDeal(array $fields): string
     {
         $result = $this->call('crm.deal.add', [
@@ -98,6 +117,13 @@ final class BitrixClient implements BitrixGatewayInterface
 
     private function call(string $method, array $parameters = []): mixed
     {
+        $decoded = $this->callEnvelope($method, $parameters);
+
+        return $decoded['result'] ?? null;
+    }
+
+    private function callEnvelope(string $method, array $parameters = []): array
+    {
         $base = rtrim(trim($this->webhookUrl), '/');
         if ($base === '') {
             throw new \RuntimeException('Configure BITRIX_WEBHOOK_URL en el archivo .env.');
@@ -145,6 +171,6 @@ final class BitrixClient implements BitrixGatewayInterface
             throw new \RuntimeException(SensitiveData::clean('Bitrix24: ' . $description, [$this->webhookUrl]));
         }
 
-        return $decoded['result'] ?? null;
+        return is_array($decoded) ? $decoded : [];
     }
 }

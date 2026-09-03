@@ -255,6 +255,9 @@ if ($method === 'POST') {
 
             case '/sync':
                 $result = $app->sync->run($app->config(), null, true);
+                if (($result['duplicates'] ?? 0) > 0) {
+                    flash('success', $result['duplicates'] . ' filas marcadas como DUPLICADO por correo existente.');
+                }
                 flash($result['errors'] > 0 ? 'error' : 'success', sprintf(
                     'Sincronización terminada: %d creadas, %d errores, %d ya existentes.',
                     $result['created'],

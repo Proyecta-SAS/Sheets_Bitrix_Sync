@@ -13,7 +13,7 @@
  */
 
 const CONTROL_STATUS_HEADER = 'Estado sincronización';
-const FINISHED_STATUSES = ['CREADA', 'PROCESANDO'];
+const FINISHED_STATUSES = ['CREADA', 'PROCESANDO', 'DUPLICADO'];
 const LAST_PROCESSED_ROW_PROPERTY = 'LAST_PROCESSED_ROW';
 
 function installTriggers() {

@@ -74,6 +74,7 @@ final class FakeBitrix implements BitrixGatewayInterface
     public array $contacts = [];
     public array $deals = [];
     public array $dealUpdates = [];
+    public array $duplicateCountsByEmail = [];
     private array $byOrigin = [];
 
     public function testConnection(): array
@@ -89,6 +90,11 @@ final class FakeBitrix implements BitrixGatewayInterface
     public function findDealByOrigin(string $originatorId, string $originId): ?string
     {
         return $this->byOrigin[$originatorId . ':' . $originId] ?? null;
+    }
+
+    public function countDealsByFieldValue(string $field, string $value): int
+    {
+        return $this->duplicateCountsByEmail[strtolower(trim($value))] ?? 0;
     }
 
     public function createDeal(array $fields): string
@@ -245,6 +251,27 @@ $tests['recupera fallo del Sheet después de crear'] = static function (): void 
     expect($bitrix->created === 1, 'La recuperación no debe duplicar la negociación.');
     expect($bitrix->contactsCreated === 1, 'La recuperacion no debe duplicar el contacto.');
     expect($sheets->rows[3][IntegrationConfig::CONTROL_STATUS] === 'CREADA', 'El estado debe repararse.');
+    @unlink($path);
+};
+
+$tests['marca duplicado por email antes de crear'] = static function (): void {
+    $sheets = new FakeSheets();
+    $sheets->rows[2] = [
+        'Nombre(Name)' => 'Negocio Duplicado',
+        'Email(email)' => 'Duplicado@Test.Local',
+        'Etapa' => 'C216:UC_Y5905W',
+    ];
+    $bitrix = new FakeBitrix();
+    $bitrix->duplicateCountsByEmail['duplicado@test.local'] = 1;
+    [$sync, $rows, $path] = service($sheets, $bitrix);
+    $result = $sync->run(config(['Nombre(Name)' => 'TITLE', 'Etapa' => 'STAGE_ID'], ['Nombre(Name)', 'Etapa']));
+    $record = $rows->latest(1)[0] ?? [];
+
+    expect($result['duplicates'] === 1, 'Debe contar la fila como duplicada.');
+    expect($bitrix->created === 0, 'No debe crear negociacion cuando el email ya existe.');
+    expect($bitrix->contactsCreated === 0, 'No debe crear contacto cuando el email ya existe.');
+    expect($sheets->rows[2][IntegrationConfig::CONTROL_STATUS] === 'DUPLICADO', 'La fila debe quedar DUPLICADO.');
+    expect(($record['status'] ?? '') === 'DUPLICADO', 'El registro local debe quedar DUPLICADO.');
     @unlink($path);
 };
 

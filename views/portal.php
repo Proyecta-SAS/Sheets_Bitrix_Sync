@@ -16,6 +16,9 @@ function flowState(array $record): array
     if ($status === 'ERROR') {
         return ['label' => 'Revisar', 'class' => 'error', 'summary' => (string) ($record['last_error'] ?? 'Error pendiente de revision.')];
     }
+    if ($status === 'DUPLICADO') {
+        return ['label' => 'Duplicado', 'class' => 'warning', 'summary' => (string) ($record['last_error'] ?? 'Correo ya registrado en Bitrix.')];
+    }
     if ($sheetSynced) {
         return ['label' => 'Completa', 'class' => 'done', 'summary' => 'Negociacion creada y Sheet actualizado.'];
     }
@@ -49,14 +52,14 @@ function stepClass(array $record, string $step): string
         return in_array($status, ['PROCESANDO', 'PENDIENTE'], true) ? 'active' : 'done';
     }
     if ($step === 'bitrix') {
-        return $hasDeal ? 'done' : ($status === 'ERROR' ? 'blocked' : 'pending');
+        return $hasDeal ? 'done' : (in_array($status, ['ERROR', 'DUPLICADO'], true) ? 'blocked' : 'pending');
     }
     if ($step === 'close') {
         if ($sheetSynced) {
             return 'done';
         }
 
-        return $hasDeal ? 'active' : ($status === 'ERROR' ? 'blocked' : 'pending');
+        return $hasDeal ? 'active' : (in_array($status, ['ERROR', 'DUPLICADO'], true) ? 'blocked' : 'pending');
     }
 
     return 'pending';
@@ -139,6 +142,7 @@ function recordState(record) {
     const hasDeal = String(record.deal_id ?? '').trim() !== '';
     const sheetSynced = String(record.sheet_synced_at ?? '').trim() !== '';
     if (status === 'ERROR') return {label: 'Revisar', className: 'error', summary: record.last_error || 'Error pendiente de revision.'};
+    if (status === 'DUPLICADO') return {label: 'Duplicado', className: 'warning', summary: record.last_error || 'Correo ya registrado en Bitrix.'};
     if (sheetSynced) return {label: 'Completa', className: 'done', summary: 'Negociacion creada y Sheet actualizado.'};
     if (hasDeal) return {label: 'Cierre pendiente', className: 'warning', summary: 'Bitrix ya devolvio ID; falta confirmar el Sheet.'};
     if (status === 'PROCESANDO') return {label: 'Procesando', className: 'active', summary: 'La fila esta tomada por un proceso de sincronizacion.'};
@@ -152,8 +156,8 @@ function stepClass(record, step) {
     const sheetSynced = String(record.sheet_synced_at ?? '').trim() !== '';
     if (step === 'sheet') return 'done';
     if (step === 'process') return status === 'ERROR' ? 'error' : (['PROCESANDO', 'PENDIENTE'].includes(status) ? 'active' : 'done');
-    if (step === 'bitrix') return hasDeal ? 'done' : (status === 'ERROR' ? 'blocked' : 'pending');
-    if (step === 'close') return sheetSynced ? 'done' : (hasDeal ? 'active' : (status === 'ERROR' ? 'blocked' : 'pending'));
+    if (step === 'bitrix') return hasDeal ? 'done' : (['ERROR', 'DUPLICADO'].includes(status) ? 'blocked' : 'pending');
+    if (step === 'close') return sheetSynced ? 'done' : (hasDeal ? 'active' : (['ERROR', 'DUPLICADO'].includes(status) ? 'blocked' : 'pending'));
     return 'pending';
 }
 

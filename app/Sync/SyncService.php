@@ -150,6 +150,9 @@ final class SyncService
             if ($result['status'] === 'created') {
                 $summary['created']++;
                 $summary['processed']++;
+            } elseif ($result['status'] === 'duplicate') {
+                $summary['duplicates']++;
+                $summary['processed']++;
             } elseif ($result['status'] === 'error') {
                 $summary['errors']++;
                 $summary['processed']++;
@@ -197,6 +200,18 @@ final class SyncService
                     IntegrationConfig::CONTROL_UNIQUE_ID => $identifier,
                 ],
             );
+
+            $dealId = $this->bitrix->findDealByOrigin(self::ORIGINATOR_ID, $identifier);
+            if ($dealId !== null) {
+                $this->rows->markCreated($recordId, $dealId, '');
+
+                return $this->finishAlreadyCreatedRow($config, $rowNumber, $identifier, $dealId);
+            }
+
+            $duplicateResult = $this->detectDuplicateEmail($values);
+            if ($duplicateResult !== null) {
+                return $this->finishDuplicateRow($config, $recordId, $rowNumber, $identifier, $duplicateResult);
+            }
 
             $fields = $this->buildDealFields($config, $values, $identifier);
             $contactId = $this->bitrix->createContact($this->buildContactFields($values, $identifier, $rowNumber));
@@ -287,6 +302,7 @@ final class SyncService
             self::CONTACT_COLUMNS['email'],
         ]);
         if ($email !== '') {
+            $email = $this->normalizeEmail($email);
             $fields['EMAIL'] = [[
                 'VALUE' => $email,
                 'VALUE_TYPE' => 'WORK',
@@ -322,11 +338,12 @@ final class SyncService
         if ($phone !== '') {
             $fields[self::DEAL_PHONE_FIELD] = $phone;
         }
-        $fields[self::DEAL_EMAIL_FIELD] = $this->firstValue($values, [
+        $email = $this->firstValue($values, [
             self::DEF_CONTACT_COLUMNS['email'],
             self::REAL_CONTACT_COLUMNS['email'],
             self::CONTACT_COLUMNS['email'],
-        ], self::NO_EMAIL_VALUE);
+        ]);
+        $fields[self::DEAL_EMAIL_FIELD] = $email !== '' ? $this->normalizeEmail($email) : self::NO_EMAIL_VALUE;
         $this->applyUserBindings($fields, $values);
 
         if (trim((string) ($fields['TITLE'] ?? '')) === '') {
@@ -429,6 +446,93 @@ final class SyncService
         );
     }
 
+    private function finishAlreadyCreatedRow(IntegrationConfig $config, int $rowNumber, string $identifier, string $dealId): array
+    {
+        try {
+            $this->recoverSheetStatus($config, $rowNumber, $identifier, $dealId);
+            $this->rows->markSheetSynced($config->spreadsheetId, $config->sheetName, $rowNumber, $dealId);
+        } catch (\Throwable $exception) {
+            $this->logger->error('sheet.recovery_pending', SensitiveData::clean($exception->getMessage()), [
+                'row' => $rowNumber,
+                'deal_id' => $dealId,
+            ]);
+        }
+
+        return ['row' => $rowNumber, 'status' => 'already_created', 'deal_id' => $dealId];
+    }
+
+    private function finishDuplicateRow(IntegrationConfig $config, int $recordId, int $rowNumber, string $identifier, array $duplicateResult): array
+    {
+        $message = (string) $duplicateResult['message'];
+        $this->rows->markDuplicate($recordId, $message);
+        try {
+            $this->markDuplicateSheet($config, $rowNumber, $identifier, $message);
+        } catch (\Throwable $exception) {
+            $this->logger->error('sheet.duplicate_status_failed', SensitiveData::clean($exception->getMessage()), [
+                'row' => $rowNumber,
+                'identifier' => $identifier,
+            ]);
+        }
+        $this->logger->info('deal.duplicate_email', 'Fila marcada como duplicada por correo.', [
+            'row' => $rowNumber,
+            'email' => $duplicateResult['email'],
+            'matches' => $duplicateResult['count'],
+            'identifier' => $identifier,
+        ]);
+
+        return [
+            'row' => $rowNumber,
+            'status' => 'duplicate',
+            'email' => $duplicateResult['email'],
+            'matches' => $duplicateResult['count'],
+        ];
+    }
+
+    private function detectDuplicateEmail(array $values): ?array
+    {
+        $email = trim((string) ($values[self::REAL_CONTACT_COLUMNS['email']] ?? ''));
+        if ($email === '') {
+            return null;
+        }
+
+        $count = $this->bitrix->countDealsByFieldValue(self::DEAL_EMAIL_FIELD, $email);
+        $normalizedEmail = $this->normalizeEmail($email);
+        if ($count <= 0 && $normalizedEmail !== $email) {
+            $count = $this->bitrix->countDealsByFieldValue(self::DEAL_EMAIL_FIELD, $normalizedEmail);
+        }
+        if ($count <= 0) {
+            return null;
+        }
+
+        return [
+            'email' => $normalizedEmail,
+            'count' => $count,
+            'message' => sprintf('DUPLICADO: ya existe %d negociacion(es) en Bitrix con el correo %s.', $count, $normalizedEmail),
+        ];
+    }
+
+    private function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    private function markDuplicateSheet(IntegrationConfig $config, int $rowNumber, string $identifier, string $message): void
+    {
+        $this->sheets->updateControlValues(
+            $config->spreadsheetId,
+            $config->sheetName,
+            $config->headerRow,
+            $rowNumber,
+            [
+                IntegrationConfig::CONTROL_STATUS => 'DUPLICADO',
+                IntegrationConfig::CONTROL_DEAL_ID => '',
+                IntegrationConfig::CONTROL_SYNCED_AT => date('Y-m-d H:i:s'),
+                IntegrationConfig::CONTROL_ERROR => $message,
+                IntegrationConfig::CONTROL_UNIQUE_ID => $identifier,
+            ],
+        );
+    }
+
     private function isEmptyBusinessRow(array $values): bool
     {
         foreach ($values as $header => $value) {
@@ -449,6 +553,7 @@ final class SyncService
             'errors' => 0,
             'locked' => 0,
             'skipped' => 0,
+            'duplicates' => 0,
             'already_created' => 0,
             'results' => [],
         ];

@@ -33,7 +33,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
     <div class="grid">
         <section class="card">
             <div class="metrics">
-                <?php foreach (['CREADA' => 'Creadas', 'PENDIENTE' => 'Pendientes', 'PROCESANDO' => 'Procesando', 'ERROR' => 'Errores'] as $key => $label): ?>
+                <?php foreach (['CREADA' => 'Creadas', 'PENDIENTE' => 'Pendientes', 'PROCESANDO' => 'Procesando', 'DUPLICADO' => 'Duplicadas', 'ERROR' => 'Errores'] as $key => $label): ?>
                     <div class="metric"><strong><?= h($counts[$key] ?? 0) ?></strong><span><?= h($label) ?></span></div>
                 <?php endforeach; ?>
             </div>

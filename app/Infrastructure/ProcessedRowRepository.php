@@ -119,6 +119,21 @@ final class ProcessedRowRepository
         ]);
     }
 
+    public function markDuplicate(int $id, string $message): void
+    {
+        $statement = $this->pdo->prepare(<<<'SQL'
+            UPDATE processed_rows
+            SET status = 'DUPLICADO', last_error = :last_error, lock_token = NULL,
+                locked_at = NULL, updated_at = :updated_at
+            WHERE id = :id AND deal_id IS NULL
+        SQL);
+        $statement->execute([
+            'last_error' => substr($message, 0, 1000),
+            'updated_at' => gmdate('c'),
+            'id' => $id,
+        ]);
+    }
+
     public function reconcileCreated(string $spreadsheetId, string $sheetName, int $rowNumber, string $identifier, string $dealId): void
     {
         $now = gmdate('c');
@@ -252,7 +267,7 @@ final class ProcessedRowRepository
     public function counts(): array
     {
         $rows = $this->pdo->query('SELECT status, COUNT(*) AS total FROM processed_rows GROUP BY status')->fetchAll();
-        $counts = ['PENDIENTE' => 0, 'PROCESANDO' => 0, 'CREADA' => 0, 'ERROR' => 0];
+        $counts = ['PENDIENTE' => 0, 'PROCESANDO' => 0, 'CREADA' => 0, 'DUPLICADO' => 0, 'ERROR' => 0];
         foreach ($rows as $row) {
             $counts[(string) $row['status']] = (int) $row['total'];
         }
@@ -267,6 +282,7 @@ final class ProcessedRowRepository
                 COUNT(*) AS total,
                 SUM(CASE WHEN status = 'PENDIENTE' THEN 1 ELSE 0 END) AS pending,
                 SUM(CASE WHEN status = 'PROCESANDO' THEN 1 ELSE 0 END) AS processing,
+                SUM(CASE WHEN status = 'DUPLICADO' THEN 1 ELSE 0 END) AS duplicates,
                 SUM(CASE WHEN status = 'ERROR' THEN 1 ELSE 0 END) AS errors,
                 SUM(CASE WHEN deal_id IS NOT NULL AND deal_id <> '' THEN 1 ELSE 0 END) AS bitrix_created,
                 SUM(CASE WHEN sheet_synced_at IS NOT NULL AND sheet_synced_at <> '' THEN 1 ELSE 0 END) AS sheet_synced
@@ -277,6 +293,7 @@ final class ProcessedRowRepository
             'total' => (int) ($row['total'] ?? 0),
             'pending' => (int) ($row['pending'] ?? 0),
             'processing' => (int) ($row['processing'] ?? 0),
+            'duplicates' => (int) ($row['duplicates'] ?? 0),
             'errors' => (int) ($row['errors'] ?? 0),
             'bitrix_created' => (int) ($row['bitrix_created'] ?? 0),
             'sheet_synced' => (int) ($row['sheet_synced'] ?? 0),
