@@ -3,17 +3,25 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Configuración requerida</title>
-    <style>
-        body{margin:0;background:#f4f7fb;color:#172033;font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;display:grid;min-height:100vh;place-items:center}.card{width:min(620px,calc(100% - 40px));background:white;border:1px solid #dce3ee;border-radius:18px;padding:32px;box-shadow:0 18px 50px rgba(31,50,81,.09)}h1{margin:0 0 12px;font-size:26px}code{display:block;background:#111827;color:#e5e7eb;padding:14px;border-radius:9px;overflow:auto}p{color:#5c677d}
-    </style>
+    <title>Configuración requerida · Sheets Bitrix Sync</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/sheets-bitrix-sync.css">
 </head>
 <body>
-<main class="card">
-    <h1>Falta proteger la administración</h1>
-    <p>Configure <strong>ADMIN_USER</strong> y <strong>ADMIN_PASSWORD_HASH</strong> en <code>.env</code>. Genere el hash desde la raíz del proyecto:</p>
-    <code>php bin/hash-password.php</code>
-    <p>La aplicación no habilita un usuario o contraseña predeterminados.</p>
+<main class="setup-page">
+    <section class="setup-card">
+        <div class="sai-brand">
+            <div class="sai-brand-mark" aria-hidden="true">SB</div>
+            <div class="sai-brand-copy"><span class="sai-brand-name">Sheets Bitrix Sync</span><span class="sai-brand-product">Configuración inicial</span></div>
+        </div>
+        <p class="eyebrow">Acción requerida</p>
+        <h1>Protege la administración</h1>
+        <p class="muted">Configura <strong>ADMIN_USER</strong> y <strong>ADMIN_PASSWORD_HASH</strong> en el archivo <span class="code">.env</span>. Genera el hash desde la raíz del proyecto:</p>
+        <code>php bin/hash-password.php</code>
+        <p class="muted">Por seguridad, Sheets Bitrix Sync no habilita credenciales predeterminadas.</p>
+    </section>
 </main>
 </body>
 </html>

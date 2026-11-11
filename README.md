@@ -2,7 +2,7 @@
 
 Aplicación PHP independiente para convertir filas nuevas de Google Sheets en negociaciones de Bitrix24 de forma configurable e idempotente.
 
-Versión actual: **V1.0.0**.
+Versión actual: **V1.1.0** — nueva identidad visual.
 
 ## Funciones
 
