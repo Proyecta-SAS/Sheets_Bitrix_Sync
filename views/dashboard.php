@@ -11,6 +11,17 @@ function h(mixed $value): string
 
 $headers = array_values(array_unique(array_merge($config->detectedHeaders, array_keys($config->mapping))));
 $availableSheets = (array) $app->settings->get('available_sheets', []);
+$adminUser = App\Support\Env::get('ADMIN_USER', 'admin');
+$adminEmail = str_contains($adminUser, '@') ? $adminUser : $adminUser . '@avanzarsoluciones.com';
+$totalRecords = array_sum(array_map('intval', $counts));
+$errorRecords = (int) ($counts['ERROR'] ?? 0);
+$metricCards = [
+    'CREADA' => ['Creadas', 'Registros enviados correctamente', 'success'],
+    'PENDIENTE' => ['Pendientes', 'Filas esperando sincronización', ''],
+    'PROCESANDO' => ['Procesando', 'Operaciones actualmente en curso', 'cyan'],
+    'DUPLICADO' => ['Duplicadas', 'Registros detectados previamente', 'warning'],
+    'ERROR' => ['Errores', 'Registros que requieren revisión', 'alert'],
+];
 ?>
 <!doctype html>
 <html lang="es">
@@ -28,48 +39,93 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
 <body>
 <div class="app-shell">
     <aside class="sidebar">
-        <div class="sai-brand">
-            <div class="sai-brand-mark" aria-hidden="true">SB</div>
-            <div class="sai-brand-copy"><span class="sai-brand-name">Sheets Bitrix Sync</span><span class="sai-brand-product">Centro de integración</span></div>
+        <div class="sidebar-brand-row">
+            <div class="sai-brand"><img class="avanzar-logo" src="assets/img/avanzar-logo.svg?v=<?= rawurlencode(App\Application::VERSION) ?>" alt="Avanzar"></div>
+            <button class="sidebar-collapse" type="button" aria-label="Contraer menú">☰</button>
         </div>
-        <nav class="sidebar-nav" aria-label="Navegación principal">
-            <span class="sidebar-label">Inicio</span>
-            <a class="sidebar-link active" href="./">Resumen general</a>
-            <a class="sidebar-link" href="#connections">Conexiones</a>
-            <span class="sidebar-label">Administración</span>
-            <a class="sidebar-link" href="#configuration">Configuración</a>
-            <a class="sidebar-link" href="#records">Registros procesados</a>
-            <a class="sidebar-link" href="#events">Eventos y errores</a>
-            <span class="sidebar-label">Monitoreo</span>
-            <a class="sidebar-link" href="portal">Portal de negociaciones</a>
-        </nav>
-        <div class="sidebar-foot">Google Sheets → Bitrix24<br>Versión <?= h(App\Application::VERSION) ?></div>
+        <div class="sidebar-scroll">
+            <nav class="sidebar-nav" aria-label="Navegación principal">
+                <span class="sidebar-label">Inicio</span>
+                <a class="sidebar-link active" href="./"><span class="nav-icon">⌂</span>Inicio</a>
+                <a class="sidebar-link" href="#overview-table"><span class="nav-icon">▥</span>Informe de sincronización <span class="nav-chevron">⌄</span></a>
+                <a class="sidebar-link" href="#connections"><span class="nav-icon">⇄</span>Conexiones</a>
+
+                <span class="sidebar-label with-rule">Operación</span>
+                <a class="sidebar-link" href="#configuration"><span class="nav-icon">⚙</span>Configuración <span class="nav-chevron">⌄</span></a>
+                <a class="sidebar-link" href="#configuration"><span class="nav-icon">⌗</span>Mapeo de campos <span class="nav-chevron">⌄</span></a>
+                <a class="sidebar-link" href="#records"><span class="nav-icon">▤</span>Registros procesados</a>
+                <a class="sidebar-link" href="#events"><span class="nav-icon">△</span>Eventos y errores <span class="nav-chevron">⌄</span></a>
+                <a class="sidebar-link" href="#execution"><span class="nav-icon">↻</span>Ejecución manual</a>
+
+                <span class="sidebar-label with-rule">Monitoreo</span>
+                <a class="sidebar-link" href="portal"><span class="nav-icon">◎</span>Portal de negociaciones</a>
+                <a class="sidebar-link" href="#records"><span class="nav-icon">◷</span>Historial</a>
+            </nav>
+        </div>
+        <a class="sidebar-settings" href="#configuration"><span class="nav-icon">⚙</span>Configuración</a>
     </aside>
 
     <div class="app-main">
         <header class="topbar">
             <div class="topbar-title"><strong>Dashboard general</strong></div>
             <div class="topbar-actions">
+                <label class="top-search"><span>⌕</span><input type="search" placeholder="Buscar registro..."></label>
                 <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn top-sync" type="submit">↻ Sincronizar</button></form>
                 <button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle></button>
-                <div class="user-chip"><span>A</span><div><strong>Administrador</strong><small>Acceso seguro</small></div></div>
-                <form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form>
+                <div class="user-menu" data-user-menu>
+                    <button class="user-chip" type="button" aria-expanded="false" aria-haspopup="menu" data-user-toggle><span>S</span><div><strong>Superadmin</strong><small>Super Administrador</small></div><b>⌄</b></button>
+                    <div class="user-dropdown" role="menu" data-user-dropdown hidden>
+                        <div class="user-dropdown-head"><strong>Superadmin DEV</strong><small><?= h($adminEmail) ?></small></div>
+                        <a href="#configuration" role="menuitem"><span>♙</span>Perfil</a>
+                        <form method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button type="submit" role="menuitem"><span>↪</span>Cerrar sesión</button></form>
+                    </div>
+                </div>
             </div>
         </header>
 
         <main class="page">
-            <section class="page-heading">
-                <div><p class="eyebrow">Vista general</p><h1>Panel de sincronización</h1><div class="muted">Google Sheets → Pipeline PRUEBA TECNOLOGIA</div></div>
-                <div class="status <?= $config->active ? '' : 'off' ?>"><span class="dot"></span><?= $config->active ? 'Integración activa' : 'Integración inactiva' ?></div>
+            <section class="page-heading dashboard-heading">
+                <div><h1>Dashboard general</h1><div class="muted">Vista global para revisar el estado de la integración, los registros procesados y los focos de gestión.</div></div>
+                <div class="heading-total"><span>Total de registros</span><strong><?= h($totalRecords) ?></strong><b><?= h($errorRecords) ?> con error</b><small><?= $config->active ? 'Integración activa' : 'Integración inactiva' ?></small></div>
             </section>
 
             <?php foreach ($flashes as $item): ?><div class="flash <?= h($item['type']) ?>" role="status"><?= h($item['message']) ?></div><?php endforeach; ?>
 
             <div class="grid">
+                <section class="status-tabs" aria-label="Filtros por estado">
+                    <button class="status-tab active" type="button">Todos los estados</button>
+                    <button class="status-tab" type="button">Creadas</button>
+                    <button class="status-tab" type="button">Pendientes</button>
+                    <button class="status-tab" type="button">Procesando</button>
+                    <button class="status-tab" type="button">Duplicadas</button>
+                    <button class="status-tab" type="button">Errores</button>
+                </section>
+
+                <section class="dashboard-toolbar">
+                    <div class="toolbar-title"><span>◷</span><b>Filtros de registros</b></div>
+                    <label><span>Fila</span><input type="text" placeholder="Número"></label>
+                    <label><span>Hoja</span><input type="text" value="<?= h($config->sheetName) ?>" readonly></label>
+                    <label><span>Desde</span><input type="text" placeholder="dd/mm/aaaa"></label>
+                    <label><span>Hasta</span><input type="text" value="<?= h(date('d/m/Y')) ?>" readonly></label>
+                    <button class="btn gradient toolbar-apply" type="button">⌕ Aplicar</button>
+                    <button class="btn toolbar-clear" type="button">Limpiar</button>
+                    <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn toolbar-sync" type="submit">↻ Sincronizar todo</button></form>
+                </section>
+
+                <div class="dashboard-notice"><span>◷</span> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
+
                 <section class="metrics" aria-label="Resumen de sincronización">
-                    <?php foreach (['CREADA' => ['Creadas', 'success'], 'PENDIENTE' => ['Pendientes', ''], 'PROCESANDO' => ['Procesando', ''], 'DUPLICADO' => ['Duplicadas', ''], 'ERROR' => ['Errores', 'alert']] as $key => [$label, $class]): ?>
-                        <div class="metric <?= h($class) ?>"><strong><?= h($counts[$key] ?? 0) ?></strong><span><?= h($label) ?></span></div>
+                    <?php foreach ($metricCards as $key => [$label, $description, $class]): ?>
+                        <div class="metric <?= h($class) ?>"><span class="metric-menu">⋮</span><span class="metric-label"><?= h($label) ?></span><strong><?= h($counts[$key] ?? 0) ?></strong><p><?= h($description) ?></p><?php if ($key === 'CREADA'): ?><small><?= h($totalRecords) ?> registros totales</small><?php endif; ?></div>
                     <?php endforeach; ?>
+                </section>
+
+                <section class="card overview-table" id="overview-table">
+                    <div class="overview-title"><h2>Actividad reciente de sincronización</h2><span>⋮</span></div>
+                    <div class="table-wrap"><table class="data-table dashboard-table"><thead><tr><th>Fila</th><th>Estado</th><th>Hoja</th><th>ID Bitrix</th><th>Identificador</th><th>Intentos</th><th>Actualizado</th></tr></thead><tbody>
+                        <?php if ($records === []): ?><tr><td colspan="7" class="empty">Todavía no hay registros procesados.</td></tr><?php endif; ?>
+                        <?php foreach (array_slice($records, 0, 8) as $record): ?><tr><td><strong>#<?= h($record['row_number']) ?></strong></td><td><span class="state-dot <?= h(strtolower((string) $record['status'])) ?>"></span><span class="badge <?= h($record['status']) ?>"><?= h($record['status']) ?></span></td><td><?= h($record['sheet_name']) ?></td><td><?= h($record['deal_id'] ?: '—') ?></td><td class="code"><?= h($record['unique_identifier']) ?></td><td><?= h($record['attempts']) ?></td><td><?= h($record['updated_at']) ?></td></tr><?php endforeach; ?>
+                    </tbody></table></div>
                 </section>
 
                 <section class="card half" id="connections">
@@ -81,7 +137,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
                     </div>
                 </section>
 
-                <section class="card half">
+                <section class="card half" id="execution">
                     <div class="card-head"><div><span class="card-kicker">Operación</span><h2>Ejecución</h2><div class="muted">Procesa hasta <?= h($config->batchSize) ?> filas pendientes por ciclo.</div></div></div>
                     <div class="actions">
                         <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn gradient" type="submit">Sincronizar ahora</button></form>
@@ -146,6 +202,29 @@ document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
     const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('sbs-theme', theme);
+});
+const userMenu = document.querySelector('[data-user-menu]');
+const userToggle = document.querySelector('[data-user-toggle]');
+const userDropdown = document.querySelector('[data-user-dropdown]');
+const closeUserMenu = () => {
+    if (!userDropdown || !userToggle) return;
+    userDropdown.hidden = true;
+    userToggle.setAttribute('aria-expanded', 'false');
+};
+userToggle?.addEventListener('click', () => {
+    const opening = userDropdown.hidden;
+    userDropdown.hidden = !opening;
+    userToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+});
+userDropdown?.querySelector('a')?.addEventListener('click', closeUserMenu);
+document.addEventListener('click', (event) => {
+    if (userMenu && !userMenu.contains(event.target)) closeUserMenu();
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeUserMenu();
+        userToggle?.focus();
+    }
 });
 </script>
 </body>

@@ -42,21 +42,20 @@
                 Conexión segura · Uso interno de Sheets Bitrix Sync
             </div>
         </div>
-        <div class="auth-watermark" aria-hidden="true"><span>S</span><span>B</span></div>
+        <div class="auth-watermark" aria-hidden="true"><img src="assets/img/avanzar-mark.svg?v=<?= rawurlencode(App\Application::VERSION) ?>" alt=""></div>
     </section>
     <section class="auth-form-wrap">
         <div class="auth-card">
-            <div class="auth-card-brand"><span>SB</span> Sheets Bitrix Sync</div>
             <h1>Bienvenido de vuelta</h1>
-            <p class="muted">Ingresa con tu cuenta administrativa para continuar.</p>
+            <p class="muted">Ingresa con tu cuenta corporativa para continuar.</p>
             <?php if ($error !== null): ?><div class="error-box" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
             <form method="post">
                 <input type="hidden" name="_csrf" value="<?= htmlspecialchars(App\Http\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
-                <div class="field"><label for="user">Usuario corporativo</label><div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm1 1 7 6 7-6"/></svg><input id="user" name="user" autocomplete="username" placeholder="Tu usuario" required autofocus></div></div>
-                <div class="field"><label for="password">Contraseña</label><div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/></svg><input id="password" type="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" required><button class="password-toggle" type="button" aria-label="Mostrar contraseña" data-password-toggle><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg></button></div></div>
+                <div class="field"><label for="user">Correo corporativo</label><div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm1 1 7 6 7-6"/></svg><input id="user" name="user" autocomplete="username" placeholder="tunombre@avanzarsoluciones.com" required autofocus></div></div>
+                <div class="field"><label for="password">Contraseña</label><div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/></svg><input id="password" type="password" name="password" autocomplete="current-password" placeholder="••••••••••" required><button class="password-toggle" type="button" aria-label="Mostrar contraseña" data-password-toggle><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg></button></div></div>
                 <button class="btn auth-submit" type="submit">Ingresar al panel <span>→</span></button>
             </form>
-            <p class="auth-note">Acceso exclusivo para usuarios autorizados.</p>
+            <p class="auth-note">Solo correos <strong>@avanzarsoluciones.com</strong> o <strong>@avanzarsoluciones.co</strong></p>
         </div>
     </section>
 </main>
