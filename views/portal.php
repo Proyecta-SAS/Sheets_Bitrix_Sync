@@ -122,11 +122,11 @@ $activeFlow = ($flow['pending'] ?? 0) + ($flow['processing'] ?? 0);
 <div class="app-shell">
 <aside class="sidebar">
     <div class="sai-brand"><div class="sai-brand-mark" aria-hidden="true">SB</div><div class="sai-brand-copy"><span class="sai-brand-name">Sheets Bitrix Sync</span><span class="sai-brand-product">Centro de integración</span></div></div>
-    <nav class="sidebar-nav" aria-label="Navegación principal"><a class="sidebar-link" href="./">Panel</a><a class="sidebar-link active" href="portal">Portal</a></nav>
+    <nav class="sidebar-nav" aria-label="Navegación principal"><span class="sidebar-label">Inicio</span><a class="sidebar-link" href="./">Resumen general</a><span class="sidebar-label">Monitoreo</span><a class="sidebar-link active" href="portal">Portal de negociaciones</a></nav>
     <div class="sidebar-foot">Monitoreo de negociaciones<br>Versión <?= h(App\Application::VERSION) ?></div>
 </aside>
 <div class="app-main">
-<header class="topbar"><div class="topbar-title"><strong>Portal de negociaciones</strong> · Seguimiento en tiempo real</div><div class="topbar-actions"><button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle></button><form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form></div></header>
+<header class="topbar"><div class="topbar-title"><strong>Portal de negociaciones</strong></div><div class="topbar-actions"><button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle></button><div class="user-chip"><span>A</span><div><strong>Administrador</strong><small>Seguimiento en vivo</small></div></div><form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form></div></header>
 <main class="page">
     <section class="page-heading"><div><p class="eyebrow">Seguimiento operativo</p><h1>Flujo de creación en Bitrix</h1><div class="muted">Hoja <?= h($config->sheetName) ?> · Pipeline <?= h($config->categoryId) ?> · Etapa <?= h($config->stageId) ?></div></div><div class="status <?= $config->active ? '' : 'off' ?>"><span class="dot"></span><?= $config->active ? 'Integración activa' : 'Integración inactiva' ?></div></section>
 

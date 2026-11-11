@@ -33,17 +33,26 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
             <div class="sai-brand-copy"><span class="sai-brand-name">Sheets Bitrix Sync</span><span class="sai-brand-product">Centro de integración</span></div>
         </div>
         <nav class="sidebar-nav" aria-label="Navegación principal">
-            <a class="sidebar-link active" href="./">Panel</a>
-            <a class="sidebar-link" href="portal">Portal</a>
+            <span class="sidebar-label">Inicio</span>
+            <a class="sidebar-link active" href="./">Resumen general</a>
+            <a class="sidebar-link" href="#connections">Conexiones</a>
+            <span class="sidebar-label">Administración</span>
+            <a class="sidebar-link" href="#configuration">Configuración</a>
+            <a class="sidebar-link" href="#records">Registros procesados</a>
+            <a class="sidebar-link" href="#events">Eventos y errores</a>
+            <span class="sidebar-label">Monitoreo</span>
+            <a class="sidebar-link" href="portal">Portal de negociaciones</a>
         </nav>
         <div class="sidebar-foot">Google Sheets → Bitrix24<br>Versión <?= h(App\Application::VERSION) ?></div>
     </aside>
 
     <div class="app-main">
         <header class="topbar">
-            <div class="topbar-title"><strong>Panel de administración</strong> · Sincronización y configuración</div>
+            <div class="topbar-title"><strong>Dashboard general</strong></div>
             <div class="topbar-actions">
+                <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn top-sync" type="submit">↻ Sincronizar</button></form>
                 <button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle></button>
+                <div class="user-chip"><span>A</span><div><strong>Administrador</strong><small>Acceso seguro</small></div></div>
                 <form class="logout" method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn small" type="submit">Salir</button></form>
             </div>
         </header>
@@ -63,7 +72,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
                     <?php endforeach; ?>
                 </section>
 
-                <section class="card half">
+                <section class="card half" id="connections">
                     <div class="card-head"><div><span class="card-kicker">Diagnóstico</span><h2>Conexiones</h2><div class="muted">Comprueba los accesos antes de activar la integración.</div></div></div>
                     <div class="actions">
                         <form method="post" action="test/google"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn" type="submit">Probar Google Sheets</button></form>
@@ -80,7 +89,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
                     </div>
                 </section>
 
-                <section class="card">
+                <section class="card" id="configuration">
                     <div class="card-head"><div><span class="card-kicker">Parámetros</span><h2>Configuración de la integración</h2><div class="muted">Los secretos se administran exclusivamente en <span class="code">.env</span>.</div></div></div>
                     <form method="post" action="settings">
                         <input type="hidden" name="_csrf" value="<?= h($csrf) ?>">
@@ -106,7 +115,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
                     </form>
                 </section>
 
-                <section class="card">
+                <section class="card" id="records">
                     <div class="card-head"><div><span class="card-kicker">Actividad</span><h2>Registros procesados</h2><div class="muted">Últimos 100 intentos persistidos localmente.</div></div></div>
                     <div class="table-wrap"><table class="data-table"><thead><tr><th>Fila</th><th>Estado</th><th>ID Bitrix</th><th>Identificador</th><th>Intentos</th><th>Actualizado</th><th>Error / acción</th></tr></thead><tbody>
                         <?php if ($records === []): ?><tr><td colspan="7" class="empty">Todavía no hay registros.</td></tr><?php endif; ?>
@@ -116,7 +125,7 @@ $availableSheets = (array) $app->settings->get('available_sheets', []);
                     </tbody></table></div>
                 </section>
 
-                <section class="card">
+                <section class="card" id="events">
                     <div class="card-head"><div><span class="card-kicker">Auditoría</span><h2>Eventos y errores</h2><div class="muted">Últimos 50 eventos, sin secretos.</div></div></div>
                     <div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha UTC</th><th>Nivel</th><th>Evento</th><th>Mensaje</th></tr></thead><tbody>
                         <?php if ($logs === []): ?><tr><td colspan="4" class="empty">Sin eventos registrados.</td></tr><?php endif; ?>
