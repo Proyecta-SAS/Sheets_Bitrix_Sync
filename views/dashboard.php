@@ -40,6 +40,7 @@ $adminUser = App\Support\Env::get('ADMIN_USER', 'admin');
 $adminEmail = str_contains($adminUser, '@') ? $adminUser : $adminUser . '@avanzarsoluciones.com';
 $totalRecords = array_sum(array_map('intval', $counts));
 $errorRecords = (int) ($counts['ERROR'] ?? 0);
+$assetVersion = App\Application::VERSION . '-' . (string) (@filemtime(__DIR__ . '/../public/assets/css/sheets-bitrix-sync.css') ?: 0);
 $metricCards = [
     'CREADA' => ['Creadas', 'Registros enviados correctamente', 'success'],
     'PENDIENTE' => ['Pendientes', 'Filas esperando sincronización', ''],
@@ -58,7 +59,7 @@ $metricCards = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/sheets-bitrix-sync.css?v=<?= rawurlencode(App\Application::VERSION) ?>">
+    <link rel="stylesheet" href="assets/css/sheets-bitrix-sync.css?v=<?= rawurlencode($assetVersion) ?>">
     <script>document.documentElement.dataset.theme=localStorage.getItem('sbs-theme')||'light';</script>
 </head>
 <body>
@@ -94,7 +95,7 @@ $metricCards = [
         <header class="topbar">
             <div class="topbar-title"><strong>Dashboard general</strong></div>
             <div class="topbar-actions">
-                <label class="top-search"><?= uiIcon('search') ?><input type="search" placeholder="Buscar registro..."></label>
+                <label class="top-search"><?= uiIcon('search') ?><input type="search" placeholder="Buscar registro..." data-record-search aria-label="Buscar registro"></label>
                 <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn top-sync" type="submit"><?= uiIcon('refresh') ?>Sincronizar</button></form>
                 <button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle><span class="theme-sun"><?= uiIcon('sun') ?></span><span class="theme-moon"><?= uiIcon('moon') ?></span></button>
                 <div class="user-menu" data-user-menu>
@@ -118,38 +119,45 @@ $metricCards = [
 
             <div class="grid">
                 <section class="status-tabs" aria-label="Filtros por estado" data-view-panel="home">
-                    <button class="status-tab active" type="button">Todos los estados</button>
-                    <button class="status-tab" type="button">Creadas</button>
-                    <button class="status-tab" type="button">Pendientes</button>
-                    <button class="status-tab" type="button">Procesando</button>
-                    <button class="status-tab" type="button">Duplicadas</button>
-                    <button class="status-tab" type="button">Errores</button>
+                    <button class="status-tab active" type="button" data-status-filter="ALL" aria-pressed="true">Todos los estados</button>
+                    <button class="status-tab" type="button" data-status-filter="CREADA" aria-pressed="false">Creadas</button>
+                    <button class="status-tab" type="button" data-status-filter="PENDIENTE" aria-pressed="false">Pendientes</button>
+                    <button class="status-tab" type="button" data-status-filter="PROCESANDO" aria-pressed="false">Procesando</button>
+                    <button class="status-tab" type="button" data-status-filter="DUPLICADO" aria-pressed="false">Duplicadas</button>
+                    <button class="status-tab" type="button" data-status-filter="ERROR" aria-pressed="false">Errores</button>
                 </section>
 
                 <section class="dashboard-toolbar" data-view-panel="home">
                     <div class="toolbar-title"><?= uiIcon('clock') ?><b>Filtros de registros</b></div>
-                    <label><span>Fila</span><input type="text" placeholder="Número"></label>
+                    <label><span>Fila</span><input type="text" inputmode="numeric" placeholder="Número" data-filter-row></label>
                     <label><span>Hoja</span><input type="text" value="<?= h($config->sheetName) ?>" readonly></label>
-                    <label><span>Desde</span><input type="text" placeholder="dd/mm/aaaa"></label>
-                    <label><span>Hasta</span><input type="text" value="<?= h(date('d/m/Y')) ?>" readonly></label>
+                    <label><span>Desde</span><input type="text" placeholder="dd/mm/aaaa" data-filter-from></label>
+                    <label><span>Hasta</span><input type="text" value="<?= h(date('d/m/Y')) ?>" data-filter-to></label>
                     <button class="btn gradient toolbar-apply" type="button"><?= uiIcon('search') ?>Aplicar</button>
                     <button class="btn toolbar-clear" type="button">Limpiar</button>
                     <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn toolbar-sync" type="submit"><?= uiIcon('refresh') ?>Sincronizar todo</button></form>
                 </section>
 
-                <div class="dashboard-notice" data-view-panel="home"><?= uiIcon('clock') ?> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
+                <div class="dashboard-notice" data-view-panel="home"><?= uiIcon('clock') ?> El tablero muestra <strong data-filter-count><?= h($totalRecords) ?> registros</strong><span data-filter-context>en todos los estados</span> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
 
                 <section class="metrics" aria-label="Resumen de sincronización" data-view-panel="home">
                     <?php foreach ($metricCards as $key => [$label, $description, $class]): ?>
-                        <div class="metric <?= h($class) ?>"><span class="metric-menu">⋮</span><span class="metric-label"><?= h($label) ?></span><strong><?= h($counts[$key] ?? 0) ?></strong><p><?= h($description) ?></p><?php if ($key === 'CREADA'): ?><small><?= h($totalRecords) ?> registros totales</small><?php endif; ?></div>
+                        <div class="metric <?= h($class) ?>" data-metric-status="<?= h($key) ?>">
+                            <button class="metric-menu" type="button" aria-label="Opciones de <?= h(strtolower($label)) ?>" aria-expanded="false" data-metric-menu-toggle>⋮</button>
+                            <div class="metric-dropdown" data-metric-dropdown hidden>
+                                <button type="button" data-download-status="<?= h($key) ?>">Descargar CSV</button>
+                            </div>
+                            <span class="metric-label"><?= h($label) ?></span><strong><?= h($counts[$key] ?? 0) ?></strong><p><?= h($description) ?></p><?php if ($key === 'CREADA'): ?><small><?= h($totalRecords) ?> registros totales</small><?php endif; ?>
+                        </div>
                     <?php endforeach; ?>
                 </section>
 
-                <section class="card overview-table" id="overview-table" data-view-panel="sync-report">
-                    <div class="overview-title"><h2>Actividad reciente de sincronización</h2><span>⋮</span></div>
+                <section class="card overview-table" id="overview-table" data-view-panel="home sync-report">
+                    <div class="overview-title"><h2 data-activity-title>Actividad reciente de sincronización</h2><span>⋮</span></div>
                     <div class="table-wrap"><table class="data-table dashboard-table"><thead><tr><th>Fila</th><th>Estado</th><th>Hoja</th><th>ID Bitrix</th><th>Identificador</th><th>Intentos</th><th>Actualizado</th></tr></thead><tbody>
-                        <?php if ($records === []): ?><tr><td colspan="7" class="empty">Todavía no hay registros procesados.</td></tr><?php endif; ?>
-                        <?php foreach (array_slice($records, 0, 8) as $record): ?><tr><td><strong>#<?= h($record['row_number']) ?></strong></td><td><span class="state-dot <?= h(strtolower((string) $record['status'])) ?>"></span><span class="badge <?= h($record['status']) ?>"><?= h($record['status']) ?></span></td><td><?= h($record['sheet_name']) ?></td><td><?= h($record['deal_id'] ?: '—') ?></td><td class="code"><?= h($record['unique_identifier']) ?></td><td><?= h($record['attempts']) ?></td><td><?= h($record['updated_at']) ?></td></tr><?php endforeach; ?>
+                        <?php if ($records === []): ?><tr data-no-records><td colspan="7" class="empty">Todavía no hay registros procesados.</td></tr><?php endif; ?>
+                        <?php foreach ($records as $record): ?><tr data-record-row data-status="<?= h($record['status']) ?>" data-row-number="<?= h($record['row_number']) ?>" data-sheet="<?= h($record['sheet_name']) ?>" data-updated="<?= h($record['updated_at']) ?>"><td><strong>#<?= h($record['row_number']) ?></strong></td><td><span class="state-dot <?= h(strtolower((string) $record['status'])) ?>"></span><span class="badge <?= h($record['status']) ?>"><?= h($record['status']) ?></span></td><td><?= h($record['sheet_name']) ?></td><td><?= h($record['deal_id'] ?: '—') ?></td><td class="code"><?= h($record['unique_identifier']) ?></td><td><?= h($record['attempts']) ?></td><td><?= h($record['updated_at']) ?></td></tr><?php endforeach; ?>
+                        <?php if ($records !== []): ?><tr data-filter-empty hidden><td colspan="7" class="empty">No hay registros que coincidan con los filtros.</td></tr><?php endif; ?>
                     </tbody></table></div>
                 </section>
 
@@ -291,6 +299,179 @@ const viewFromLocation = () => location.hash.replace(/^#/, '') || 'home';
 setCurrentView(viewFromLocation(), false);
 window.addEventListener('popstate', () => setCurrentView(viewFromLocation(), false));
 
+const recordRows = [...document.querySelectorAll('[data-record-row]')];
+const filterEmptyRow = document.querySelector('[data-filter-empty]');
+const statusFilterButtons = [...document.querySelectorAll('[data-status-filter]')];
+const rowFilterInput = document.querySelector('[data-filter-row]');
+const fromFilterInput = document.querySelector('[data-filter-from]');
+const toFilterInput = document.querySelector('[data-filter-to]');
+const recordSearchInput = document.querySelector('[data-record-search]');
+const dashboardNoticeCount = document.querySelector('[data-filter-count]');
+const dashboardFilterContext = document.querySelector('[data-filter-context]');
+const activityTitle = document.querySelector('[data-activity-title]');
+const noRecordsRow = document.querySelector('[data-no-records]');
+const metricCardsElements = [...document.querySelectorAll('[data-metric-status]')];
+const recordFilters = { status: 'ALL', row: '', from: '', to: '', search: '' };
+const statusLabels = {
+    ALL: 'todos los estados',
+    CREADA: 'creadas',
+    PENDIENTE: 'pendientes',
+    PROCESANDO: 'procesando',
+    DUPLICADO: 'duplicadas',
+    ERROR: 'errores',
+};
+
+const parseDashboardDate = (value) => {
+    const normalized = String(value || '').trim();
+    if (!normalized) return null;
+    const latinDate = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (latinDate) return new Date(Number(latinDate[3]), Number(latinDate[2]) - 1, Number(latinDate[1]));
+    const isoDate = normalized.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoDate) return new Date(Number(isoDate[1]), Number(isoDate[2]) - 1, Number(isoDate[3]));
+    return null;
+};
+
+const recordMatchesFilters = (row, forcedStatus = recordFilters.status) => {
+    if (forcedStatus !== 'ALL' && row.dataset.status !== forcedStatus) return false;
+    if (recordFilters.row && row.dataset.rowNumber !== recordFilters.row.replace(/^#/, '')) return false;
+    if (recordFilters.search && !row.innerText.toLocaleLowerCase('es').includes(recordFilters.search)) return false;
+
+    const updated = parseDashboardDate(row.dataset.updated);
+    const from = parseDashboardDate(recordFilters.from);
+    const to = parseDashboardDate(recordFilters.to);
+    if (from && updated && updated < from) return false;
+    if (to && updated && updated > to) return false;
+    return true;
+};
+
+const applyRecordFilters = () => {
+    let matchCount = 0;
+    let displayedCount = 0;
+    recordRows.forEach((row) => {
+        const matches = recordMatchesFilters(row);
+        row.hidden = !matches || displayedCount >= 8;
+        if (matches) {
+            matchCount += 1;
+            displayedCount += 1;
+        }
+    });
+    if (filterEmptyRow) filterEmptyRow.hidden = matchCount !== 0 || recordRows.length === 0;
+    if (noRecordsRow) {
+        noRecordsRow.hidden = recordRows.length !== 0;
+        const cell = noRecordsRow.querySelector('td');
+        if (cell) cell.textContent = recordFilters.status === 'ALL'
+            ? 'Todavía no hay registros procesados en el entorno local.'
+            : `No hay registros ${statusLabels[recordFilters.status]} en el entorno local.`;
+    }
+    if (dashboardNoticeCount) dashboardNoticeCount.textContent = `${matchCount} ${matchCount === 1 ? 'registro' : 'registros'}`;
+    if (dashboardFilterContext) dashboardFilterContext.textContent = `en ${statusLabels[recordFilters.status]}`;
+    if (activityTitle) activityTitle.textContent = recordFilters.status === 'ALL'
+        ? 'Actividad reciente de sincronización'
+        : `Actividad reciente · ${statusLabels[recordFilters.status]}`;
+};
+
+const selectStatusFilter = (status) => {
+    recordFilters.status = status;
+    statusFilterButtons.forEach((button) => {
+        const active = button.dataset.statusFilter === status;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    metricCardsElements.forEach((card) => {
+        const selected = status === 'ALL' || card.dataset.metricStatus === status;
+        card.classList.toggle('filter-selected', status !== 'ALL' && selected);
+        card.classList.toggle('filter-muted', !selected);
+    });
+    applyRecordFilters();
+};
+
+statusFilterButtons.forEach((button) => {
+    button.addEventListener('click', () => selectStatusFilter(button.dataset.statusFilter || 'ALL'));
+});
+
+document.querySelector('.toolbar-apply')?.addEventListener('click', () => {
+    const fromValue = fromFilterInput?.value.trim() || '';
+    const toValue = toFilterInput?.value.trim() || '';
+    const rowValue = rowFilterInput?.value.trim().replace(/^#/, '') || '';
+    const validFrom = !fromValue || parseDashboardDate(fromValue);
+    const validTo = !toValue || parseDashboardDate(toValue);
+    const validRow = !rowValue || /^\d+$/.test(rowValue);
+    fromFilterInput?.setCustomValidity(validFrom ? '' : 'Usa el formato dd/mm/aaaa.');
+    toFilterInput?.setCustomValidity(validTo ? '' : 'Usa el formato dd/mm/aaaa.');
+    rowFilterInput?.setCustomValidity(validRow ? '' : 'Ingresa únicamente el número de la fila.');
+    const invalidInput = [rowFilterInput, fromFilterInput, toFilterInput].find((input) => input && !input.checkValidity());
+    if (invalidInput) {
+        invalidInput.reportValidity();
+        return;
+    }
+    recordFilters.row = rowValue;
+    recordFilters.from = fromValue;
+    recordFilters.to = toValue;
+    applyRecordFilters();
+});
+
+document.querySelector('.toolbar-clear')?.addEventListener('click', () => {
+    [rowFilterInput, fromFilterInput].forEach((input) => { if (input) input.value = ''; });
+    if (toFilterInput) toFilterInput.value = '<?= h(date('d/m/Y')) ?>';
+    if (recordSearchInput) recordSearchInput.value = '';
+    [rowFilterInput, fromFilterInput, toFilterInput].forEach((input) => input?.setCustomValidity(''));
+    Object.assign(recordFilters, { status: 'ALL', row: '', from: '', to: '<?= h(date('d/m/Y')) ?>', search: '' });
+    selectStatusFilter('ALL');
+});
+
+recordSearchInput?.addEventListener('input', () => {
+    recordFilters.search = recordSearchInput.value.trim().toLocaleLowerCase('es');
+    applyRecordFilters();
+});
+
+const closeMetricMenus = () => {
+    document.querySelectorAll('[data-metric-dropdown]').forEach((dropdown) => { dropdown.hidden = true; });
+    document.querySelectorAll('[data-metric-menu-toggle]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+};
+
+document.querySelectorAll('[data-metric-menu-toggle]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const dropdown = button.parentElement?.querySelector('[data-metric-dropdown]');
+        const opening = Boolean(dropdown?.hidden);
+        closeMetricMenus();
+        if (dropdown && opening) {
+            dropdown.hidden = false;
+            button.setAttribute('aria-expanded', 'true');
+        }
+    });
+});
+
+const csvCell = (value) => {
+    let safeValue = String(value ?? '').replace(/\s+/g, ' ').trim();
+    if (/^[=+\-@]/.test(safeValue)) safeValue = `'${safeValue}`;
+    return `"${safeValue.replaceAll('"', '""')}"`;
+};
+
+document.querySelectorAll('[data-download-status]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const status = button.dataset.downloadStatus || 'ALL';
+        const headers = [...document.querySelectorAll('.dashboard-table thead th')].map((cell) => cell.innerText.trim());
+        const rows = recordRows
+            .filter((row) => recordMatchesFilters(row, status))
+            .map((row) => [...row.cells].map((cell) => cell.innerText.trim()));
+        const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+        const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `registros-${status.toLocaleLowerCase('es')}-<?= h(date('Y-m-d')) ?>.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        closeMetricMenus();
+    });
+});
+
+recordFilters.to = toFilterInput?.value.trim() || '';
+applyRecordFilters();
+
 const userMenu = document.querySelector('[data-user-menu]');
 const userToggle = document.querySelector('[data-user-toggle]');
 const userDropdown = document.querySelector('[data-user-dropdown]');
@@ -307,10 +488,12 @@ userToggle?.addEventListener('click', () => {
 userDropdown?.querySelector('a')?.addEventListener('click', closeUserMenu);
 document.addEventListener('click', (event) => {
     if (userMenu && !userMenu.contains(event.target)) closeUserMenu();
+    if (!(event.target instanceof Element) || !event.target.closest('.metric')) closeMetricMenus();
 });
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeUserMenu();
+        closeMetricMenus();
         userToggle?.focus();
     }
 });

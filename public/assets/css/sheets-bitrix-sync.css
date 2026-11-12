@@ -184,7 +184,7 @@ html[data-theme="dark"] .theme-toggle .theme-moon { display: none; }
 .logout-button { width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--sai-text-3); cursor: pointer; }
 
 .page { position: relative; width: min(100%, 1600px); margin: 0 auto; padding: 16px 62px 56px; }
-.page::before { content: ""; position: fixed; z-index: -1; left: calc(var(--sai-sidebar) + 34%); top: 23%; width: 620px; height: 620px; background: url('../img/avanzar-mark.svg') center/contain no-repeat; opacity: .025; filter: grayscale(1); }
+.page::before { content: ""; position: fixed; z-index: -1; inset: 0 0 0 var(--sai-sidebar); background: url('../img/avanzar-mark.svg') center/620px 620px no-repeat; opacity: .025; filter: grayscale(1); pointer-events: none; transition: inset .2s ease; }
 .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 18px; padding: 24px 22px; border: 1px solid var(--sai-border); border-radius: 15px; background: var(--sai-surface); box-shadow: var(--sai-shadow-sm); }
 .dashboard-heading { min-height: 156px; align-items: center; padding: 22px; }
 .dashboard-heading h1 { margin-bottom: 7px; font-size: 27px; }
@@ -234,8 +234,15 @@ body[data-current-view="field-mapping"] #configuration .form-grid { display: non
 .card-help { background: linear-gradient(135deg, color-mix(in srgb, var(--sai-primary-light) 70%, var(--sai-surface)), var(--sai-surface)); }
 
 .metrics { grid-column: span 12; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.metric { position: relative; min-width: 0; min-height: 154px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 12px; overflow: hidden; border: 1px solid var(--sai-border); border-radius: 12px; background: var(--sai-surface); box-shadow: var(--sai-shadow-sm); text-align: center; }
-.metric-menu { position: absolute !important; right: 12px; top: 9px; color: var(--sai-text-3) !important; font-size: 18px !important; }
+.metric { position: relative; min-width: 0; min-height: 154px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 12px; overflow: hidden; border: 1px solid var(--sai-border); border-radius: 12px; background: var(--sai-surface); box-shadow: var(--sai-shadow-sm); text-align: center; transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease; }
+.metric.filter-muted { opacity: .42; }
+.metric.filter-selected { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(15,27,53,.14); }
+.metric-menu { position: absolute; z-index: 3; right: 7px; top: 6px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; background: transparent; color: var(--sai-text-3); font: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.metric-menu:hover, .metric-menu[aria-expanded="true"] { background: var(--sai-surface-2); color: var(--sai-text); }
+.metric-dropdown { position: absolute; z-index: 4; right: 10px; top: 39px; min-width: 145px; overflow: hidden; border: 1px solid var(--sai-border); border-radius: 10px; background: var(--sai-surface); box-shadow: 0 14px 28px rgba(15,27,53,.16); }
+.metric-dropdown[hidden] { display: none; }
+.metric-dropdown button { width: 100%; min-height: 38px; padding: 9px 12px; border: 0; background: transparent; color: var(--sai-text-2); font: inherit; font-size: 10px; font-weight: 700; text-align: left; cursor: pointer; }
+.metric-dropdown button:hover { background: var(--sai-surface-2); color: var(--sai-primary); }
 .metric .metric-label { color: var(--sai-text-3); font-size: 10px; font-weight: 800; text-transform: uppercase; }
 .metric strong { position: relative; z-index: 1; display: block; margin: 5px 0 3px; color: var(--sai-primary); font-size: 24px; line-height: 1.1; letter-spacing: -.04em; }
 .metric p { margin: 0; color: var(--sai-text-2); font-size: 10px; font-weight: 600; }
@@ -440,6 +447,7 @@ input:focus, select:focus { border-color: var(--sai-primary); box-shadow: 0 0 0 
     .app-main { margin-left: 0; }
     .topbar { min-height: 64px; padding: 11px 18px; }
     .page { padding: 24px 18px 44px; }
+    .page::before { left: 0; }
     .dashboard-heading { min-height: auto; }
     .dashboard-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dashboard-toolbar label, .dashboard-toolbar .btn, .dashboard-toolbar form { grid-column: auto; }
