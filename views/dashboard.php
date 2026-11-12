@@ -20,7 +20,7 @@ function uiIcon(string $name): string
         'sliders' => '<path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/>',
         'table' => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 9v11"/>',
         'alert' => '<path d="M10.3 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/>',
-        'refresh' => '<path d="M20 11a8 8 0 1 0 2 5M20 4v7h-7"/>',
+        'refresh' => '<path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/>',
         'target' => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
         'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
@@ -71,23 +71,23 @@ $metricCards = [
         <div class="sidebar-scroll">
             <nav class="sidebar-nav" aria-label="Navegación principal">
                 <span class="sidebar-label">Inicio</span>
-                <a class="sidebar-link active" href="./"><span class="nav-icon"><?= uiIcon('home') ?></span>Inicio</a>
-                <a class="sidebar-link" href="#overview-table"><span class="nav-icon"><?= uiIcon('chart') ?></span>Informe de sincronización <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
-                <a class="sidebar-link" href="#connections"><span class="nav-icon"><?= uiIcon('link') ?></span>Conexiones</a>
+                <a class="sidebar-link active" href="#home" data-view-link="home"><span class="nav-icon"><?= uiIcon('home') ?></span>Inicio</a>
+                <a class="sidebar-link" href="#sync-report" data-view-link="sync-report"><span class="nav-icon"><?= uiIcon('chart') ?></span>Informe de sincronización</a>
+                <a class="sidebar-link" href="#connections" data-view-link="connections"><span class="nav-icon"><?= uiIcon('link') ?></span>Conexiones</a>
 
                 <span class="sidebar-label with-rule">Operación</span>
-                <a class="sidebar-link" href="#configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
-                <a class="sidebar-link" href="#field-mapping"><span class="nav-icon"><?= uiIcon('sliders') ?></span>Mapeo de campos <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
-                <a class="sidebar-link" href="#records"><span class="nav-icon"><?= uiIcon('table') ?></span>Registros procesados</a>
-                <a class="sidebar-link" href="#events"><span class="nav-icon"><?= uiIcon('alert') ?></span>Eventos y errores <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
-                <a class="sidebar-link" href="#execution"><span class="nav-icon"><?= uiIcon('refresh') ?></span>Ejecución manual</a>
+                <a class="sidebar-link" href="#configuration" data-view-link="configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración</a>
+                <a class="sidebar-link" href="#field-mapping" data-view-link="field-mapping"><span class="nav-icon"><?= uiIcon('sliders') ?></span>Mapeo de campos</a>
+                <a class="sidebar-link" href="#records" data-view-link="records"><span class="nav-icon"><?= uiIcon('table') ?></span>Registros procesados</a>
+                <a class="sidebar-link" href="#events" data-view-link="events"><span class="nav-icon"><?= uiIcon('alert') ?></span>Eventos y errores</a>
+                <a class="sidebar-link" href="#execution" data-view-link="execution"><span class="nav-icon"><?= uiIcon('refresh') ?></span>Ejecución manual</a>
 
                 <span class="sidebar-label with-rule">Monitoreo</span>
                 <a class="sidebar-link" href="portal"><span class="nav-icon"><?= uiIcon('target') ?></span>Portal de negociaciones</a>
-                <a class="sidebar-link" href="#records"><span class="nav-icon"><?= uiIcon('clock') ?></span>Historial</a>
+                <a class="sidebar-link" href="#history" data-view-link="history"><span class="nav-icon"><?= uiIcon('clock') ?></span>Historial</a>
             </nav>
         </div>
-        <a class="sidebar-settings" href="#configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración</a>
+        <a class="sidebar-settings" href="#configuration" data-view-link="configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración</a>
     </aside>
 
     <div class="app-main">
@@ -101,7 +101,7 @@ $metricCards = [
                     <button class="user-chip" type="button" aria-expanded="false" aria-haspopup="menu" data-user-toggle><span>S</span><div><strong>Superadmin</strong><small>Super Administrador</small></div><b><?= uiIcon('chevron') ?></b></button>
                     <div class="user-dropdown" role="menu" data-user-dropdown hidden>
                         <div class="user-dropdown-head"><strong>Superadmin DEV</strong><small><?= h($adminEmail) ?></small></div>
-                        <a href="#configuration" role="menuitem"><span><?= uiIcon('user') ?></span>Perfil</a>
+                        <a href="#configuration" role="menuitem" data-view-link="configuration"><span><?= uiIcon('user') ?></span>Perfil</a>
                         <form method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button type="submit" role="menuitem"><span><?= uiIcon('logout') ?></span>Cerrar sesión</button></form>
                     </div>
                 </div>
@@ -109,7 +109,7 @@ $metricCards = [
         </header>
 
         <main class="page">
-            <section class="page-heading dashboard-heading">
+            <section class="page-heading dashboard-heading" data-view-panel="home">
                 <div><h1>Dashboard general</h1><div class="muted">Vista global para revisar el estado de la integración, los registros procesados y los focos de gestión.</div></div>
                 <div class="heading-total"><span>Total de registros</span><strong><?= h($totalRecords) ?></strong><b><?= h($errorRecords) ?> con error</b><small><?= $config->active ? 'Integración activa' : 'Integración inactiva' ?></small></div>
             </section>
@@ -117,7 +117,7 @@ $metricCards = [
             <?php foreach ($flashes as $item): ?><div class="flash <?= h($item['type']) ?>" role="status"><?= h($item['message']) ?></div><?php endforeach; ?>
 
             <div class="grid">
-                <section class="status-tabs" aria-label="Filtros por estado">
+                <section class="status-tabs" aria-label="Filtros por estado" data-view-panel="home">
                     <button class="status-tab active" type="button">Todos los estados</button>
                     <button class="status-tab" type="button">Creadas</button>
                     <button class="status-tab" type="button">Pendientes</button>
@@ -126,7 +126,7 @@ $metricCards = [
                     <button class="status-tab" type="button">Errores</button>
                 </section>
 
-                <section class="dashboard-toolbar">
+                <section class="dashboard-toolbar" data-view-panel="home">
                     <div class="toolbar-title"><?= uiIcon('clock') ?><b>Filtros de registros</b></div>
                     <label><span>Fila</span><input type="text" placeholder="Número"></label>
                     <label><span>Hoja</span><input type="text" value="<?= h($config->sheetName) ?>" readonly></label>
@@ -137,15 +137,15 @@ $metricCards = [
                     <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn toolbar-sync" type="submit"><?= uiIcon('refresh') ?>Sincronizar todo</button></form>
                 </section>
 
-                <div class="dashboard-notice"><?= uiIcon('clock') ?> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
+                <div class="dashboard-notice" data-view-panel="home"><?= uiIcon('clock') ?> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
 
-                <section class="metrics" aria-label="Resumen de sincronización">
+                <section class="metrics" aria-label="Resumen de sincronización" data-view-panel="home">
                     <?php foreach ($metricCards as $key => [$label, $description, $class]): ?>
                         <div class="metric <?= h($class) ?>"><span class="metric-menu">⋮</span><span class="metric-label"><?= h($label) ?></span><strong><?= h($counts[$key] ?? 0) ?></strong><p><?= h($description) ?></p><?php if ($key === 'CREADA'): ?><small><?= h($totalRecords) ?> registros totales</small><?php endif; ?></div>
                     <?php endforeach; ?>
                 </section>
 
-                <section class="card overview-table" id="overview-table">
+                <section class="card overview-table" id="overview-table" data-view-panel="sync-report">
                     <div class="overview-title"><h2>Actividad reciente de sincronización</h2><span>⋮</span></div>
                     <div class="table-wrap"><table class="data-table dashboard-table"><thead><tr><th>Fila</th><th>Estado</th><th>Hoja</th><th>ID Bitrix</th><th>Identificador</th><th>Intentos</th><th>Actualizado</th></tr></thead><tbody>
                         <?php if ($records === []): ?><tr><td colspan="7" class="empty">Todavía no hay registros procesados.</td></tr><?php endif; ?>
@@ -153,7 +153,7 @@ $metricCards = [
                     </tbody></table></div>
                 </section>
 
-                <section class="card half" id="connections">
+                <section class="card half" id="connections" data-view-panel="connections">
                     <div class="card-head"><div><span class="card-kicker">Diagnóstico</span><h2>Conexiones</h2><div class="muted">Comprueba los accesos antes de activar la integración.</div></div></div>
                     <div class="actions">
                         <form method="post" action="test/google"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn" type="submit">Probar Google Sheets</button></form>
@@ -162,7 +162,7 @@ $metricCards = [
                     </div>
                 </section>
 
-                <section class="card half" id="execution">
+                <section class="card half" id="execution" data-view-panel="execution">
                     <div class="card-head"><div><span class="card-kicker">Operación</span><h2>Ejecución</h2><div class="muted">Procesa hasta <?= h($config->batchSize) ?> filas pendientes por ciclo.</div></div></div>
                     <div class="actions">
                         <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn gradient" type="submit">Sincronizar ahora</button></form>
@@ -170,7 +170,7 @@ $metricCards = [
                     </div>
                 </section>
 
-                <section class="card" id="configuration">
+                <section class="card" id="configuration" data-view-panel="configuration field-mapping">
                     <div class="card-head"><div><span class="card-kicker">Parámetros</span><h2>Configuración de la integración</h2><div class="muted">Los secretos se administran exclusivamente en <span class="code">.env</span>.</div></div></div>
                     <form method="post" action="settings">
                         <input type="hidden" name="_csrf" value="<?= h($csrf) ?>">
@@ -196,7 +196,7 @@ $metricCards = [
                     </form>
                 </section>
 
-                <section class="card" id="records">
+                <section class="card" id="records" data-view-panel="records history">
                     <div class="card-head"><div><span class="card-kicker">Actividad</span><h2>Registros procesados</h2><div class="muted">Últimos 100 intentos persistidos localmente.</div></div></div>
                     <div class="table-wrap"><table class="data-table"><thead><tr><th>Fila</th><th>Estado</th><th>ID Bitrix</th><th>Identificador</th><th>Intentos</th><th>Actualizado</th><th>Error / acción</th></tr></thead><tbody>
                         <?php if ($records === []): ?><tr><td colspan="7" class="empty">Todavía no hay registros.</td></tr><?php endif; ?>
@@ -206,7 +206,7 @@ $metricCards = [
                     </tbody></table></div>
                 </section>
 
-                <section class="card" id="events">
+                <section class="card" id="events" data-view-panel="events">
                     <div class="card-head"><div><span class="card-kicker">Auditoría</span><h2>Eventos y errores</h2><div class="muted">Últimos 50 eventos, sin secretos.</div></div></div>
                     <div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha UTC</th><th>Nivel</th><th>Evento</th><th>Mensaje</th></tr></thead><tbody>
                         <?php if ($logs === []): ?><tr><td colspan="4" class="empty">Sin eventos registrados.</td></tr><?php endif; ?>
@@ -214,7 +214,7 @@ $metricCards = [
                     </tbody></table></div>
                 </section>
 
-                <section class="card card-help">
+                <section class="card card-help" data-view-panel="home">
                     <span class="card-kicker">Guía rápida</span><h2>Orden recomendado</h2>
                     <ol><li>Completa <span class="code">.env</span> y comparte el Sheet con el correo de la cuenta de servicio.</li><li>Guarda el ID y la hoja, prueba Google y lee los encabezados.</li><li>Prueba Bitrix, completa los códigos <span class="code">UF_CRM_...</span> reales y guarda.</li><li>Ejecuta una sincronización manual; cuando valides el resultado, activa la integración y el cron.</li></ol>
                 </section>
@@ -240,33 +240,56 @@ sidebarToggle?.addEventListener('click', () => {
     setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
 });
 
-const sidebarLinks = [...document.querySelectorAll('.sidebar-link')];
-const setActiveSidebarLink = (activeLink) => {
-    sidebarLinks.forEach((link) => link.classList.toggle('active', link === activeLink));
+const viewLinks = [...document.querySelectorAll('[data-view-link]')];
+const viewPanels = [...document.querySelectorAll('[data-view-panel]')];
+const topbarTitle = document.querySelector('.topbar-title strong');
+const viewTitles = {
+    home: 'Dashboard general',
+    'sync-report': 'Informe de sincronización',
+    connections: 'Conexiones',
+    configuration: 'Configuración',
+    'field-mapping': 'Mapeo de campos',
+    records: 'Registros procesados',
+    events: 'Eventos y errores',
+    execution: 'Ejecución manual',
+    history: 'Historial',
 };
-sidebarLinks.forEach((link) => {
-    const href = link.getAttribute('href');
-    if (href === './') {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            history.replaceState(null, '', location.pathname);
-            setActiveSidebarLink(link);
-        });
-        return;
+const legacyViews = {
+    'overview-table': 'sync-report',
+};
+const hasView = (view) => viewPanels.some((panel) => panel.dataset.viewPanel.split(' ').includes(view));
+const setCurrentView = (requestedView, updateHistory = true) => {
+    const normalizedView = legacyViews[requestedView] || requestedView;
+    const view = hasView(normalizedView) ? normalizedView : 'home';
+
+    document.body.dataset.currentView = view;
+    viewPanels.forEach((panel) => {
+        panel.hidden = !panel.dataset.viewPanel.split(' ').includes(view);
+    });
+    viewLinks.forEach((link) => {
+        const active = link.dataset.viewLink === view;
+        if (link.classList.contains('sidebar-link')) link.classList.toggle('active', active);
+        link.toggleAttribute('aria-current', active);
+    });
+    if (topbarTitle) topbarTitle.textContent = viewTitles[view] || viewTitles.home;
+
+    if (updateHistory) {
+        const nextUrl = view === 'home' ? `${location.pathname}${location.search}` : `#${view}`;
+        history.pushState({ view }, '', nextUrl);
     }
-    if (!href?.startsWith('#')) return;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+};
+
+viewLinks.forEach((link) => {
     link.addEventListener('click', (event) => {
-        const target = document.querySelector(href);
-        if (!target) return;
         event.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        history.replaceState(null, '', href);
-        setActiveSidebarLink(link);
+        setCurrentView(link.dataset.viewLink);
     });
 });
-const initialSidebarLink = sidebarLinks.find((link) => link.getAttribute('href') === location.hash);
-if (initialSidebarLink) setActiveSidebarLink(initialSidebarLink);
+
+const viewFromLocation = () => location.hash.replace(/^#/, '') || 'home';
+setCurrentView(viewFromLocation(), false);
+window.addEventListener('popstate', () => setCurrentView(viewFromLocation(), false));
 
 const userMenu = document.querySelector('[data-user-menu]');
 const userToggle = document.querySelector('[data-user-toggle]');
