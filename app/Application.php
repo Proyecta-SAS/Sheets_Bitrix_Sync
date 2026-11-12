@@ -17,7 +17,7 @@ use App\Sync\SyncService;
 
 final class Application
 {
-    public const VERSION = '1.2.4';
+    public const VERSION = '1.2.5';
 
     private IntegrationConfig $config;
 

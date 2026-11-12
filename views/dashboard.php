@@ -9,6 +9,31 @@ function h(mixed $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+function uiIcon(string $name): string
+{
+    $icons = [
+        'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
+        'home' => '<path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/>',
+        'chart' => '<path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/>',
+        'link' => '<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>',
+        'settings' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>',
+        'sliders' => '<path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/>',
+        'table' => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 9v11"/>',
+        'alert' => '<path d="M10.3 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/>',
+        'refresh' => '<path d="M20 11a8 8 0 1 0 2 5M20 4v7h-7"/>',
+        'target' => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+        'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+        'chevron' => '<path d="m8 10 4 4 4-4"/>',
+        'user' => '<circle cx="12" cy="8" r="3"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+        'logout' => '<path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>',
+        'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        'moon' => '<path d="M20.5 14.5A8 8 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z"/>',
+    ];
+
+    return '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">' . ($icons[$name] ?? '') . '</svg>';
+}
+
 $headers = array_values(array_unique(array_merge($config->detectedHeaders, array_keys($config->mapping))));
 $availableSheets = (array) $app->settings->get('available_sheets', []);
 $adminUser = App\Support\Env::get('ADMIN_USER', 'admin');
@@ -41,43 +66,43 @@ $metricCards = [
     <aside class="sidebar">
         <div class="sidebar-brand-row">
             <div class="sai-brand"><img class="avanzar-logo" src="assets/img/avanzar-logo.svg?v=<?= rawurlencode(App\Application::VERSION) ?>" alt="Avanzar"></div>
-            <button class="sidebar-collapse" type="button" aria-label="Contraer menú">☰</button>
+            <button class="sidebar-collapse" type="button" aria-label="Contraer menú" aria-expanded="true" data-sidebar-toggle><?= uiIcon('menu') ?></button>
         </div>
         <div class="sidebar-scroll">
             <nav class="sidebar-nav" aria-label="Navegación principal">
                 <span class="sidebar-label">Inicio</span>
-                <a class="sidebar-link active" href="./"><span class="nav-icon">⌂</span>Inicio</a>
-                <a class="sidebar-link" href="#overview-table"><span class="nav-icon">▥</span>Informe de sincronización <span class="nav-chevron">⌄</span></a>
-                <a class="sidebar-link" href="#connections"><span class="nav-icon">⇄</span>Conexiones</a>
+                <a class="sidebar-link active" href="./"><span class="nav-icon"><?= uiIcon('home') ?></span>Inicio</a>
+                <a class="sidebar-link" href="#overview-table"><span class="nav-icon"><?= uiIcon('chart') ?></span>Informe de sincronización <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
+                <a class="sidebar-link" href="#connections"><span class="nav-icon"><?= uiIcon('link') ?></span>Conexiones</a>
 
                 <span class="sidebar-label with-rule">Operación</span>
-                <a class="sidebar-link" href="#configuration"><span class="nav-icon">⚙</span>Configuración <span class="nav-chevron">⌄</span></a>
-                <a class="sidebar-link" href="#configuration"><span class="nav-icon">⌗</span>Mapeo de campos <span class="nav-chevron">⌄</span></a>
-                <a class="sidebar-link" href="#records"><span class="nav-icon">▤</span>Registros procesados</a>
-                <a class="sidebar-link" href="#events"><span class="nav-icon">△</span>Eventos y errores <span class="nav-chevron">⌄</span></a>
-                <a class="sidebar-link" href="#execution"><span class="nav-icon">↻</span>Ejecución manual</a>
+                <a class="sidebar-link" href="#configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
+                <a class="sidebar-link" href="#field-mapping"><span class="nav-icon"><?= uiIcon('sliders') ?></span>Mapeo de campos <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
+                <a class="sidebar-link" href="#records"><span class="nav-icon"><?= uiIcon('table') ?></span>Registros procesados</a>
+                <a class="sidebar-link" href="#events"><span class="nav-icon"><?= uiIcon('alert') ?></span>Eventos y errores <span class="nav-chevron"><?= uiIcon('chevron') ?></span></a>
+                <a class="sidebar-link" href="#execution"><span class="nav-icon"><?= uiIcon('refresh') ?></span>Ejecución manual</a>
 
                 <span class="sidebar-label with-rule">Monitoreo</span>
-                <a class="sidebar-link" href="portal"><span class="nav-icon">◎</span>Portal de negociaciones</a>
-                <a class="sidebar-link" href="#records"><span class="nav-icon">◷</span>Historial</a>
+                <a class="sidebar-link" href="portal"><span class="nav-icon"><?= uiIcon('target') ?></span>Portal de negociaciones</a>
+                <a class="sidebar-link" href="#records"><span class="nav-icon"><?= uiIcon('clock') ?></span>Historial</a>
             </nav>
         </div>
-        <a class="sidebar-settings" href="#configuration"><span class="nav-icon">⚙</span>Configuración</a>
+        <a class="sidebar-settings" href="#configuration"><span class="nav-icon"><?= uiIcon('settings') ?></span>Configuración</a>
     </aside>
 
     <div class="app-main">
         <header class="topbar">
             <div class="topbar-title"><strong>Dashboard general</strong></div>
             <div class="topbar-actions">
-                <label class="top-search"><span>⌕</span><input type="search" placeholder="Buscar registro..."></label>
-                <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn top-sync" type="submit">↻ Sincronizar</button></form>
-                <button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle></button>
+                <label class="top-search"><?= uiIcon('search') ?><input type="search" placeholder="Buscar registro..."></label>
+                <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn top-sync" type="submit"><?= uiIcon('refresh') ?>Sincronizar</button></form>
+                <button class="btn theme-toggle" type="button" aria-label="Cambiar tema" data-theme-toggle><span class="theme-sun"><?= uiIcon('sun') ?></span><span class="theme-moon"><?= uiIcon('moon') ?></span></button>
                 <div class="user-menu" data-user-menu>
-                    <button class="user-chip" type="button" aria-expanded="false" aria-haspopup="menu" data-user-toggle><span>S</span><div><strong>Superadmin</strong><small>Super Administrador</small></div><b>⌄</b></button>
+                    <button class="user-chip" type="button" aria-expanded="false" aria-haspopup="menu" data-user-toggle><span>S</span><div><strong>Superadmin</strong><small>Super Administrador</small></div><b><?= uiIcon('chevron') ?></b></button>
                     <div class="user-dropdown" role="menu" data-user-dropdown hidden>
                         <div class="user-dropdown-head"><strong>Superadmin DEV</strong><small><?= h($adminEmail) ?></small></div>
-                        <a href="#configuration" role="menuitem"><span>♙</span>Perfil</a>
-                        <form method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button type="submit" role="menuitem"><span>↪</span>Cerrar sesión</button></form>
+                        <a href="#configuration" role="menuitem"><span><?= uiIcon('user') ?></span>Perfil</a>
+                        <form method="post" action="logout"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button type="submit" role="menuitem"><span><?= uiIcon('logout') ?></span>Cerrar sesión</button></form>
                     </div>
                 </div>
             </div>
@@ -102,17 +127,17 @@ $metricCards = [
                 </section>
 
                 <section class="dashboard-toolbar">
-                    <div class="toolbar-title"><span>◷</span><b>Filtros de registros</b></div>
+                    <div class="toolbar-title"><?= uiIcon('clock') ?><b>Filtros de registros</b></div>
                     <label><span>Fila</span><input type="text" placeholder="Número"></label>
                     <label><span>Hoja</span><input type="text" value="<?= h($config->sheetName) ?>" readonly></label>
                     <label><span>Desde</span><input type="text" placeholder="dd/mm/aaaa"></label>
                     <label><span>Hasta</span><input type="text" value="<?= h(date('d/m/Y')) ?>" readonly></label>
-                    <button class="btn gradient toolbar-apply" type="button">⌕ Aplicar</button>
+                    <button class="btn gradient toolbar-apply" type="button"><?= uiIcon('search') ?>Aplicar</button>
                     <button class="btn toolbar-clear" type="button">Limpiar</button>
-                    <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn toolbar-sync" type="submit">↻ Sincronizar todo</button></form>
+                    <form method="post" action="sync"><input type="hidden" name="_csrf" value="<?= h($csrf) ?>"><button class="btn toolbar-sync" type="submit"><?= uiIcon('refresh') ?>Sincronizar todo</button></form>
                 </section>
 
-                <div class="dashboard-notice"><span>◷</span> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
+                <div class="dashboard-notice"><?= uiIcon('clock') ?> El tablero muestra el estado actual de <strong><?= h($totalRecords) ?> registros</strong> de <?= h($config->sheetName) ?> hacia Bitrix24.</div>
 
                 <section class="metrics" aria-label="Resumen de sincronización">
                     <?php foreach ($metricCards as $key => [$label, $description, $class]): ?>
@@ -160,7 +185,7 @@ $metricCards = [
                             <div class="field"><label for="batch_size">Filas por ejecución</label><input id="batch_size" type="number" name="batch_size" min="1" max="100" value="<?= h($config->batchSize) ?>"></div>
                         </div>
 
-                        <div class="card-head" style="margin-top:30px"><div><span class="card-kicker">Correspondencia</span><h2>Mapeo de campos</h2><div class="muted">Deja vacíos los campos que no deseas enviar. Registra los códigos reales <span class="code">UF_CRM_...</span>.</div></div></div>
+                        <div class="card-head" id="field-mapping" style="margin-top:30px"><div><span class="card-kicker">Correspondencia</span><h2>Mapeo de campos</h2><div class="muted">Deja vacíos los campos que no deseas enviar. Registra los códigos reales <span class="code">UF_CRM_...</span>.</div></div></div>
                         <div class="table-wrap"><table class="mapping"><thead><tr><th>Columna del Sheet</th><th class="arrow"></th><th>Campo de Bitrix24</th></tr></thead><tbody>
                             <?php foreach ($headers as $header): ?>
                                 <tr><td><input type="hidden" name="mapping_column[]" value="<?= h($header) ?>"><strong><?= h($header) ?></strong></td><td class="arrow">→</td><td><input type="text" name="mapping_field[]" value="<?= h($config->mapping[$header] ?? '') ?>" list="bitrix-fields" placeholder="UF_CRM_..."></td></tr>
@@ -203,6 +228,46 @@ document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('sbs-theme', theme);
 });
+const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+const setSidebarCollapsed = (collapsed) => {
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    sidebarToggle?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    sidebarToggle?.setAttribute('aria-label', collapsed ? 'Expandir menú' : 'Contraer menú');
+    localStorage.setItem('sbs-sidebar-collapsed', collapsed ? '1' : '0');
+};
+setSidebarCollapsed(localStorage.getItem('sbs-sidebar-collapsed') === '1');
+sidebarToggle?.addEventListener('click', () => {
+    setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+});
+
+const sidebarLinks = [...document.querySelectorAll('.sidebar-link')];
+const setActiveSidebarLink = (activeLink) => {
+    sidebarLinks.forEach((link) => link.classList.toggle('active', link === activeLink));
+};
+sidebarLinks.forEach((link) => {
+    const href = link.getAttribute('href');
+    if (href === './') {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            history.replaceState(null, '', location.pathname);
+            setActiveSidebarLink(link);
+        });
+        return;
+    }
+    if (!href?.startsWith('#')) return;
+    link.addEventListener('click', (event) => {
+        const target = document.querySelector(href);
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', href);
+        setActiveSidebarLink(link);
+    });
+});
+const initialSidebarLink = sidebarLinks.find((link) => link.getAttribute('href') === location.hash);
+if (initialSidebarLink) setActiveSidebarLink(initialSidebarLink);
+
 const userMenu = document.querySelector('[data-user-menu]');
 const userToggle = document.querySelector('[data-user-toggle]');
 const userDropdown = document.querySelector('[data-user-dropdown]');
